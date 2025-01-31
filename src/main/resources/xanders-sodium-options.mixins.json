@@ -12,8 +12,6 @@
     "SliderControlAccessor",
     "SodiumOptionsGUIAccessor",
     "compat.iris.SodiumOptionsGUIMixin",
-    "compat.moreculling.FloatSliderControlAccessor",
-    "compat.moreculling.IntSliderControlAccessor",
     "compat.moreculling.MoreCullingOptionImplBuilderMixin",
     "compat.moreculling.MoreCullingOptionImplMixin",
     "compat.moreculling.MoreCullingSodiumOptionImplAccessor",

@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.8-SNAPSHOT'
+    id 'fabric-loom' version '1.9-SNAPSHOT'
 }
 
 version =  property("mod.version") + "+" + stonecutter.current.version
@@ -54,7 +54,7 @@ dependencies {
     // moreculling category placement
     modImplementation "maven.modrinth:moreculling:${property('deps.moreculling')}"
     // iris category placement
-    modImplementation "maven.modrinth:iris:${property('deps.iris')}"
+    modCompileOnly "maven.modrinth:iris:${property('deps.iris')}"
 
     modRuntimeOnly("maven.modrinth:cloth-config:${property('runtime.cloth')}")
 
@@ -92,11 +92,9 @@ tasks.register('buildAndCollect', Copy) {
     dependsOn("build")
 }
 
-if (stonecutter.current.active) { // run configs for non-active version would be invalid
-    loom {
-        runConfigs.all {
-            ideConfigGenerated = true // generate IDE tasks for running client, server and testmod, datagen if those are present
-            runDir "../../run" // use a global run directory for all versions
-        }
+loom {
+    runConfigs.all {
+        ideConfigGenerated = true // generate IDE tasks for running client, server and testmod, datagen if those are present
+        runDir "../../run" // use a global run directory for all versions
     }
 }

@@ -30,27 +30,6 @@ public class MoreCullingCompat {
         ((OptionHolder<T>) sodiumOption).holdOption(yaclOption);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static <T> boolean convertControl(dev.isxander.yacl3.api.Option.Builder<T> yaclOption, Option<T> sodiumOption) {
-        //? if <1.21.2 {
-        /*if (sodiumOption.getControl() instanceof ca.fxco.moreculling.config.sodium.IntSliderControl sliderControl) {
-            dev.isxander.xso.mixins.compat.moreculling.IntSliderControlAccessor accessor = (dev.isxander.xso.mixins.compat.moreculling.IntSliderControlAccessor) sliderControl;
-            yaclOption.controller(opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder.create((dev.isxander.yacl3.api.Option<Integer>) opt).range(accessor.getMin(), accessor.getMax()).step(accessor.getInterval()));
-            return true;
-        }
-
-        if (sodiumOption.getControl() instanceof ca.fxco.moreculling.config.sodium.FloatSliderControl sliderControl) {
-            dev.isxander.xso.mixins.compat.moreculling.FloatSliderControlAccessor accessor = (dev.isxander.xso.mixins.compat.moreculling.FloatSliderControlAccessor) sliderControl;
-            yaclOption.controller(opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder.create((dev.isxander.yacl3.api.Option<Float>) opt).range(accessor.getMin(), accessor.getMax()).step(accessor.getInterval()));
-            return true;
-        }
-        *///?}
-
-        // Don't need to do anything with moreculling after 1.21.2
-
-        return false;
-    }
-
     public static void extendMoreCullingPage(SodiumOptionsGUI optionsGUI, OptionPage page, ConfigCategory.Builder builder) {
         MoreCullingPageHolder shaderPageHolder = (MoreCullingPageHolder) optionsGUI;
         if (shaderPageHolder.getMoreCullingPage() == page) {

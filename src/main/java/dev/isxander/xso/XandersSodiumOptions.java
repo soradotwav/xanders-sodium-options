@@ -29,11 +29,13 @@ import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.SodiumGameOptions;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class XandersSodiumOptions {
     private static boolean errorOccured = false;
@@ -43,11 +45,24 @@ public class XandersSodiumOptions {
             YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder()
                     .title(Text.translatable("Sodium Options"));
 
+            AtomicReference<PlaceholderCategory> shaderPackPage = new AtomicReference<>();
             for (OptionPage page : pages) {
-                builder.category(convertCategory(page, sodiumOptionsGUI));
+                var category = convertCategory(page, sodiumOptionsGUI);
+
+                if (category == null) continue;
+                if (category instanceof PlaceholderCategory placeholderCategory) {
+                    shaderPackPage.set(placeholderCategory);
+                    continue;
+                }
+
+                builder.category(category);
             }
 
             builder.category(XsoConfig.getConfigCategory());
+
+            if (shaderPackPage.get() != null) {
+                builder.category(shaderPackPage.get());
+            }
 
             builder.save(() -> {
                 Set<OptionStorage<?>> storages = new HashSet<>();
@@ -102,6 +117,7 @@ public class XandersSodiumOptions {
         }
     }
 
+    @Nullable
     private static ConfigCategory convertCategory(OptionPage page, SodiumOptionsGUI sodiumOptionsGUI) {
         try {
             if (Compat.IRIS) {
@@ -109,6 +125,10 @@ public class XandersSodiumOptions {
                 if (shaderPackPage.isPresent()) {
                     return shaderPackPage.get();
                 }
+            }
+
+            if (page.getName().contains(Text.literal("LambDynamicLights"))) {
+                return null;
             }
 
             ConfigCategory.Builder categoryBuilder = ConfigCategory.createBuilder()
@@ -208,10 +228,6 @@ public class XandersSodiumOptions {
         }
 
         if (Compat.SODIUM_EXTRA && SodiumExtraCompat.convertControl(yaclOption, sodiumOption)) {
-            return;
-        }
-
-        if (Compat.MORE_CULLING && MoreCullingCompat.convertControl(yaclOption, sodiumOption)) {
             return;
         }
 
