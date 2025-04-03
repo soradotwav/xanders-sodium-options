@@ -73,7 +73,7 @@ public class IrisCompat {
                             .option(ButtonOption.createBuilder()
                                     .name(Text.translatable("options.iris.openShaderPackScreen"))
                                     .description(OptionDescription.of(Text.translatable("options.iris.openShaderPackScreen.description")))
-                                    .action((screen, opt) -> new ShaderPackScreen(screen))
+                                    .action((screen, opt) -> MinecraftClient.getInstance().setScreen(new ShaderPackScreen(screen)))
                                     .build())
                             .option(LabelOption.create(Text.empty()))
                             .option(ButtonOption.createBuilder()

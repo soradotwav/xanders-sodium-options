@@ -49,12 +49,10 @@ dependencies {
     modImplementation("maven.modrinth:sodium:${property('deps.sodium')}")
     modRuntimeOnly modCompileOnly("com.terraformersmc:modmenu:${property('deps.modmenu')}")
 
-    // sodium extra better options compat
     modImplementation "maven.modrinth:sodium-extra:${property('deps.sodium-extra')}"
-    // moreculling category placement
     modImplementation "maven.modrinth:moreculling:${property('deps.moreculling')}"
-    // iris category placement
-    modCompileOnly "maven.modrinth:iris:${property('deps.iris')}"
+
+    modCompileOnly ("maven.modrinth:iris:${property('deps.iris')}")
 
     modRuntimeOnly("maven.modrinth:cloth-config:${property('runtime.cloth')}")
 
