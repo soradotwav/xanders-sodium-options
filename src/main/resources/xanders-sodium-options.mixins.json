@@ -4,19 +4,7 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "CyclingControlAccessor",
     "MinecraftClientMixin",
-    "OptionImplAccessor",
-    "OptionImplBuilderMixin",
-    "OptionImplMixin",
-    "SliderControlAccessor",
-    "SodiumOptionsGUIAccessor",
-    "DynamicMaxSliderControlAccessor",
-    "compat.iris.SodiumOptionsGUIMixin",
-    "compat.moreculling.MoreCullingOptionImplBuilderMixin",
-    "compat.moreculling.MoreCullingOptionImplMixin",
-    "compat.moreculling.MoreCullingSodiumOptionImplAccessor",
-    "compat.moreculling.SodiumOptionsGUIMixin",
-    "compat.sodiumextra.SliderControlExtAccessor"
+    "VideoSettingsScreenAccessor"
   ]
 }
