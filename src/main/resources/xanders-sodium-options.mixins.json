@@ -11,6 +11,7 @@
     "OptionImplMixin",
     "SliderControlAccessor",
     "SodiumOptionsGUIAccessor",
+    "DynamicMaxSliderControlAccessor",
     "compat.iris.SodiumOptionsGUIMixin",
     "compat.moreculling.MoreCullingOptionImplBuilderMixin",
     "compat.moreculling.MoreCullingOptionImplMixin",

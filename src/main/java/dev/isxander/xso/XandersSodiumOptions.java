@@ -4,6 +4,7 @@ import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.xso.mixins.CyclingControlAccessor;
 import dev.isxander.xso.mixins.SliderControlAccessor;
+import dev.isxander.xso.mixins.DynamicMaxSliderControlAccessor;
 import dev.isxander.xso.utils.ClassCapture;
 import dev.isxander.xso.utils.DonationPrompt;
 import dev.isxander.yacl3.api.*;
@@ -24,6 +25,7 @@ import net.caffeinemc.mods.sodium.client.gui.options.OptionPage;
 import net.caffeinemc.mods.sodium.client.gui.options.TextProvider;
 import net.caffeinemc.mods.sodium.client.gui.options.control.CyclingControl;
 import net.caffeinemc.mods.sodium.client.gui.options.control.SliderControl;
+import net.caffeinemc.mods.sodium.client.gui.options.control.DynamicMaxSliderControl;
 import net.caffeinemc.mods.sodium.client.gui.options.control.TickBoxControl;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
 import net.caffeinemc.mods.sodium.client.SodiumClientMod;
@@ -40,7 +42,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class XandersSodiumOptions {
     private static boolean errorOccured = false;
 
-    public static Screen wrapSodiumScreen(SodiumOptionsGUI sodiumOptionsGUI, List<OptionPage> pages, Screen prevScreen) {
+    public static Screen wrapSodiumScreen(SodiumOptionsGUI sodiumOptionsGUI, List<OptionPage> pages,
+            Screen prevScreen) {
         try {
             YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder()
                     .title(Text.translatable("Sodium Options"));
@@ -49,7 +52,8 @@ public class XandersSodiumOptions {
             for (OptionPage page : pages) {
                 var category = convertCategory(page, sodiumOptionsGUI);
 
-                if (category == null) continue;
+                if (category == null)
+                    continue;
                 if (category instanceof PlaceholderCategory placeholderCategory) {
                     shaderPackPage.set(placeholderCategory);
                     continue;
@@ -112,7 +116,9 @@ public class XandersSodiumOptions {
                     errorOccured = true;
                     MinecraftClient.getInstance().setScreen(sodiumOptionsGUI);
                     errorOccured = false;
-                }, Text.literal("Xander's Sodium Options failed"), Text.literal("Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occured which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."), ScreenTexts.PROCEED, true);
+                }, Text.literal("Xander's Sodium Options failed"), Text.literal(
+                        "Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occured which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."),
+                        ScreenTexts.PROCEED, true);
             }
         }
     }
@@ -147,7 +153,8 @@ public class XandersSodiumOptions {
 
             return categoryBuilder.build();
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to convert Sodium option page named '" + page.getName().getString() + "' to YACL config category.", e);
+            throw new IllegalStateException("Failed to convert Sodium option page named '" + page.getName().getString()
+                    + "' to YACL config category.", e);
         }
     }
 
@@ -159,7 +166,8 @@ public class XandersSodiumOptions {
             }
 
             if (!(sodiumOption instanceof ClassCapture<?>)) {
-                throw new IllegalStateException("Failed to capture class of sodium option! Likely due to custom Option implementation.");
+                throw new IllegalStateException(
+                        "Failed to capture class of sodium option! Likely due to custom Option implementation.");
             }
 
             MutableText descText = sodiumOption.getTooltip().copy();
@@ -167,11 +175,13 @@ public class XandersSodiumOptions {
             Option.Builder<T> builder = Option.createBuilder(((ClassCapture<T>) sodiumOption).getCapturedClass())
                     .name(sodiumOption.getName())
                     .flags(convertFlags(sodiumOption))
-                    .binding(Compat.MORE_CULLING ? MoreCullingCompat.getBinding(sodiumOption) : new SodiumBinding<>(sodiumOption))
+                    .binding(Compat.MORE_CULLING ? MoreCullingCompat.getBinding(sodiumOption)
+                            : new SodiumBinding<>(sodiumOption))
                     .available(sodiumOption.isAvailable());
 
             if (sodiumOption.getImpact() != null) {
-                descText = descText.append("\n").append(Text.translatable("sodium.options.performance_impact_string", sodiumOption.getImpact().getLocalizedName()).formatted(Formatting.GRAY));
+                descText = descText.append("\n").append(Text.translatable("sodium.options.performance_impact_string",
+                        sodiumOption.getImpact().getLocalizedName()).formatted(Formatting.GRAY));
             }
 
             builder.description(OptionDescription.of(descText));
@@ -179,7 +189,8 @@ public class XandersSodiumOptions {
             addController(builder, sodiumOption);
 
             Option<T> built = builder.build();
-            if (Compat.MORE_CULLING) MoreCullingCompat.addAvailableCheck(built, sodiumOption);
+            if (Compat.MORE_CULLING)
+                MoreCullingCompat.addAvailableCheck(built, sodiumOption);
             return built;
         } catch (Exception e) {
             if (XsoConfig.INSTANCE.getConfig().lenientOptions) {
@@ -187,22 +198,28 @@ public class XandersSodiumOptions {
                 e.printStackTrace();
                 return ButtonOption.createBuilder()
                         .name(sodiumOption.getName())
-                        .description(OptionDescription.of(sodiumOption.getTooltip(), Text.translatable("xso.incompatible.tooltip").formatted(Formatting.RED)))
+                        .description(OptionDescription.of(sodiumOption.getTooltip(),
+                                Text.translatable("xso.incompatible.tooltip").formatted(Formatting.RED)))
                         .available(false)
                         .text(Text.translatable("xso.incompatible.button").formatted(Formatting.RED))
-                        .action((screen, opt) -> {})
+                        .action((screen, opt) -> {
+                        })
                         .build();
             } else {
-                throw new IllegalStateException("Failed to convert Sodium option named '" + sodiumOption.getName().getString() + "' to a YACL option!", e);
+                throw new IllegalStateException("Failed to convert Sodium option named '"
+                        + sodiumOption.getName().getString() + "' to a YACL option!", e);
             }
         }
     }
 
     // nasty, nasty raw types to make the compiler not commit die
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static <T> void addController(dev.isxander.yacl3.api.Option.Builder<T> yaclOption, net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static <T> void addController(dev.isxander.yacl3.api.Option.Builder<T> yaclOption,
+            net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption) {
         if (sodiumOption.getControl() instanceof TickBoxControl) {
-            yaclOption.controller(opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) TickBoxControllerBuilder.create((Option<Boolean>) opt));
+            yaclOption
+                    .controller(opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) TickBoxControllerBuilder
+                            .create((Option<Boolean>) opt));
             return;
         }
 
@@ -212,18 +229,32 @@ public class XandersSodiumOptions {
             Class<?> arrType = allowedValues.getClass().getComponentType();
 
             yaclOption.controller(opt -> new EnumControllerBuilderImpl<>((Option) opt).formatValue(value -> {
-                    if (value instanceof TextProvider textProvider)
-                        return textProvider.getLocalizedName();
-                    if (value instanceof TranslatableOption translatableOption)
-                        return translatableOption.getText();
-                    return Text.of(((Enum<?>) value).name());
+                if (value instanceof TextProvider textProvider)
+                    return textProvider.getLocalizedName();
+                if (value instanceof TranslatableOption translatableOption)
+                    return translatableOption.getText();
+                return Text.of(((Enum<?>) value).name());
             }).enumClass(arrType));
             return;
         }
 
         if (sodiumOption.getControl() instanceof SliderControl sliderControl) {
             SliderControlAccessor accessor = (SliderControlAccessor) sliderControl;
-            yaclOption.controller(opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) IntegerSliderControllerBuilder.create((Option<Integer>) opt).step(accessor.getInterval()).range(accessor.getMin(), accessor.getMax()).formatValue(value -> accessor.getMode().format(value)));
+            yaclOption.controller(
+                    opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) IntegerSliderControllerBuilder
+                            .create((Option<Integer>) opt).step(accessor.getInterval())
+                            .range(accessor.getMin(), accessor.getMax())
+                            .formatValue(value -> accessor.getMode().format(value)));
+            return;
+        }
+
+        if (sodiumOption.getControl() instanceof DynamicMaxSliderControl dynamicMaxSliderControl) {
+            DynamicMaxSliderControlAccessor accessor = (DynamicMaxSliderControlAccessor) dynamicMaxSliderControl;
+            yaclOption.controller(
+                    opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) IntegerSliderControllerBuilder
+                            .create((Option<Integer>) opt).step(accessor.getInterval())
+                            .range(accessor.getMin(), accessor.getMax().getAsInt())
+                            .formatValue(value -> accessor.getMode().format(value)));
             return;
         }
 
@@ -231,23 +262,28 @@ public class XandersSodiumOptions {
             return;
         }
 
-        throw new IllegalStateException("Unsupported Sodium Controller: " + sodiumOption.getControl().getClass().getName());
+        throw new IllegalStateException(
+                "Unsupported Sodium Controller: " + sodiumOption.getControl().getClass().getName());
     }
 
     private static List<OptionFlag> convertFlags(net.caffeinemc.mods.sodium.client.gui.options.Option<?> sodiumOption) {
         List<OptionFlag> flags = new ArrayList<>();
 
-        if (sodiumOption.getFlags().contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_RENDERER_RELOAD)) {
+        if (sodiumOption.getFlags()
+                .contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_RENDERER_RELOAD)) {
             flags.add(OptionFlag.RELOAD_CHUNKS);
-        } else if (sodiumOption.getFlags().contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_RENDERER_UPDATE)) {
+        } else if (sodiumOption.getFlags()
+                .contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_RENDERER_UPDATE)) {
             flags.add(OptionFlag.WORLD_RENDER_UPDATE);
         }
 
-        if (sodiumOption.getFlags().contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_ASSET_RELOAD)) {
+        if (sodiumOption.getFlags()
+                .contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_ASSET_RELOAD)) {
             flags.add(OptionFlag.ASSET_RELOAD);
         }
 
-        if (sodiumOption.getFlags().contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_GAME_RESTART)) {
+        if (sodiumOption.getFlags()
+                .contains(net.caffeinemc.mods.sodium.client.gui.options.OptionFlag.REQUIRES_GAME_RESTART)) {
             flags.add(OptionFlag.GAME_RESTART);
         }
 
