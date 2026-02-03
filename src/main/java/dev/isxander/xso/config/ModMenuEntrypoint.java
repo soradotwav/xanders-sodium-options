@@ -12,6 +12,7 @@ public class ModMenuEntrypoint implements ModMenuApi {
                 .title(Text.translatable("xso.title"))
                 .category(XsoConfig.getConfigCategory())
                 .save(XsoConfig.INSTANCE::save)
-                .build().generateScreen(parent);
+                .build()
+                .generateScreen(parent);
     }
 }

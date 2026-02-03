@@ -7,6 +7,19 @@ import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.isxander.yacl3.impl.controller.EnumControllerBuilderImpl;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import net.caffeinemc.mods.sodium.client.SodiumClientMod;
+import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
+import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
+import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
+import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
+import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
+import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
+import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.NoticeScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -14,41 +27,25 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-
-import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
-import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
-import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
-import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
-import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
-import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.LoggerFactory;
 
 public class XandersSodiumOptions {
     private static boolean errorOccurred = false;
     private static final Logger LOGGER = LoggerFactory.getLogger("xanders-sodium-options");
 
-    public static Screen wrapSodiumScreen(VideoSettingsScreen videoSettingsScreen, List<OptionPage> pages,
-            Screen prevScreen) {
+    public static Screen wrapSodiumScreen(
+            VideoSettingsScreen videoSettingsScreen, List<OptionPage> pages, Screen prevScreen) {
         try {
-            YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder()
-                    .title(Text.translatable("options.videoTitle"));
+            YetAnotherConfigLib.Builder builder =
+                    YetAnotherConfigLib.createBuilder().title(Text.translatable("options.videoTitle"));
 
             AtomicReference<PlaceholderCategory> shaderPackPage = new AtomicReference<>();
             for (OptionPage page : pages) {
                 var category = convertCategory(page);
 
-                if (category == null)
-                    continue;
+                if (category == null) continue;
                 if (category instanceof PlaceholderCategory placeholderCategory) {
                     shaderPackPage.set(placeholderCategory);
                     continue;
@@ -80,7 +77,8 @@ public class XandersSodiumOptions {
 
                 if (fingerprint != null) {
                     Instant now = Instant.now();
-                    Instant threshold = Instant.ofEpochSecond(fingerprint.timestamp()).plus(3L, ChronoUnit.DAYS);
+                    Instant threshold =
+                            Instant.ofEpochSecond(fingerprint.timestamp()).plus(3L, ChronoUnit.DAYS);
                     if (now.isAfter(threshold)) {
                         options.notifications.hasSeenDonationPrompt = true;
                         try {
@@ -102,13 +100,17 @@ public class XandersSodiumOptions {
             } else {
                 LOGGER.error("Failed to convert Sodium GUI to YACL", exception);
 
-                return new NoticeScreen(() -> {
-                    errorOccurred = true;
-                    MinecraftClient.getInstance().setScreen(videoSettingsScreen);
-                    errorOccurred = false;
-                }, Text.literal("Xander's Sodium Options failed"), Text.literal(
-                        "Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occurred which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."),
-                        ScreenTexts.PROCEED, true);
+                return new NoticeScreen(
+                        () -> {
+                            errorOccurred = true;
+                            MinecraftClient.getInstance().setScreen(videoSettingsScreen);
+                            errorOccurred = false;
+                        },
+                        Text.literal("Xander's Sodium Options failed"),
+                        Text.literal(
+                                "Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occurred which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."),
+                        ScreenTexts.PROCEED,
+                        true);
             }
         }
     }
@@ -127,8 +129,8 @@ public class XandersSodiumOptions {
                 return null;
             }
 
-            ConfigCategory.Builder categoryBuilder = ConfigCategory.createBuilder()
-                    .name(page.name());
+            ConfigCategory.Builder categoryBuilder =
+                    ConfigCategory.createBuilder().name(page.name());
 
             for (var group : page.groups()) {
                 categoryBuilder.option(LabelOption.create(Text.empty()));
@@ -138,13 +140,15 @@ public class XandersSodiumOptions {
                 }
             }
 
-            if (Compat.MORE_CULLING)
-                MoreCullingCompat.extendMoreCullingPage(page, categoryBuilder);
+            if (Compat.MORE_CULLING) MoreCullingCompat.extendMoreCullingPage(page, categoryBuilder);
 
             return categoryBuilder.build();
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to convert Sodium option page named '" + page.name().getString()
-                    + "' to YACL config category.", e);
+            throw new IllegalStateException(
+                    "Failed to convert Sodium option page named '"
+                            + page.name().getString()
+                            + "' to YACL config category.",
+                    e);
         }
     }
 
@@ -155,27 +159,32 @@ public class XandersSodiumOptions {
                 case BooleanOption booleanOption -> convertBooleanOption(booleanOption);
                 case IntegerOption integerOption -> convertIntegerOption(integerOption);
                 case EnumOption<?> enumOption -> convertEnumOption(enumOption);
-                default ->
-                    throw new IllegalStateException(
-                            "Unsupported Sodium Option type: " + sodiumOption.getClass().getName());
+                default -> throw new IllegalStateException("Unsupported Sodium Option type: "
+                        + sodiumOption.getClass().getName());
             };
         } catch (Exception e) {
             if (XsoConfig.INSTANCE.instance().lenientOptions) {
-                LOGGER.error("Failed to convert Sodium option named '" + sodiumOption.getName().getString()
-                        + "' to YACL option.", e);
+                LOGGER.error(
+                        "Failed to convert Sodium option named '"
+                                + sodiumOption.getName().getString()
+                                + "' to YACL option.",
+                        e);
 
                 return ButtonOption.createBuilder()
                         .name(sodiumOption.getName())
-                        .description(OptionDescription.of(sodiumOption.getTooltip(),
+                        .description(OptionDescription.of(
+                                sodiumOption.getTooltip(),
                                 Text.translatable("xso.incompatible.tooltip").formatted(Formatting.RED)))
                         .available(false)
                         .text(Text.translatable("xso.incompatible.button").formatted(Formatting.RED))
-                        .action((screen, opt) -> {
-                        })
+                        .action((screen, opt) -> {})
                         .build();
             } else {
-                throw new IllegalStateException("Failed to convert Sodium option named '"
-                        + sodiumOption.getName().getString() + "' to a YACL option!", e);
+                throw new IllegalStateException(
+                        "Failed to convert Sodium option named '"
+                                + sodiumOption.getName().getString()
+                                + "' to a YACL option!",
+                        e);
             }
         }
     }
@@ -185,7 +194,9 @@ public class XandersSodiumOptions {
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Text.translatable("sodium.options.performance_impact_string", option.getImpact().getName())
+                    .append(Text.translatable(
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -204,7 +215,9 @@ public class XandersSodiumOptions {
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Text.translatable("sodium.options.performance_impact_string", option.getImpact().getName())
+                    .append(Text.translatable(
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -223,13 +236,15 @@ public class XandersSodiumOptions {
                 .build();
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static <E extends Enum<E>> Option<E> convertEnumOption(EnumOption<E> option) {
         MutableText descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Text.translatable("sodium.options.performance_impact_string", option.getImpact().getName())
+                    .append(Text.translatable(
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -253,19 +268,19 @@ public class XandersSodiumOptions {
             return flags;
         }
 
-        if (sodiumFlags
-                .contains(net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_RENDERER_RELOAD.getId())) {
+        if (sodiumFlags.contains(
+                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_RENDERER_RELOAD.getId())) {
             flags.add(OptionFlag.RELOAD_CHUNKS);
-        } else if (sodiumFlags
-                .contains(net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_RENDERER_UPDATE.getId())) {
+        } else if (sodiumFlags.contains(
+                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_RENDERER_UPDATE.getId())) {
             flags.add(OptionFlag.WORLD_RENDER_UPDATE);
         }
-        if (sodiumFlags
-                .contains(net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_ASSET_RELOAD.getId())) {
+        if (sodiumFlags.contains(
+                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_ASSET_RELOAD.getId())) {
             flags.add(OptionFlag.ASSET_RELOAD);
         }
-        if (sodiumFlags
-                .contains(net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_GAME_RESTART.getId())) {
+        if (sodiumFlags.contains(
+                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_GAME_RESTART.getId())) {
             flags.add(OptionFlag.GAME_RESTART);
         }
 

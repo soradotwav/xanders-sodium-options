@@ -1,5 +1,7 @@
 package dev.isxander.xso.utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -10,9 +12,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class DonationPrompt extends Screen {
     private static final List<Text> DONATION_PROMPT_MESSAGE = List.of(
@@ -26,9 +25,12 @@ public class DonationPrompt extends Screen {
             Text.literal("Mods like these are complex. They require ")
                     .append(Text.literal("thousands of hours").setStyle(Style.EMPTY.withColor(16739840)))
                     .append(Text.empty().formatted(Formatting.RESET))
-                    .append(Text.literal(" of development, debugging, and tuning to create the experience that players have come to expect.")),
+                    .append(
+                            Text.literal(
+                                    " of development, debugging, and tuning to create the experience that players have come to expect.")),
             Text.empty(),
-            Text.literal("If you'd like to show your token of appreciation, and support the development of our mod in the process, then consider ")
+            Text.literal(
+                            "If you'd like to show your token of appreciation, and support the development of our mod in the process, then consider ")
                     .append(Text.literal("buying us a coffee").setStyle(Style.EMPTY.withColor(15550926)))
                     .append(Text.literal(".").formatted(Formatting.RESET)),
             Text.empty(),
@@ -60,12 +62,15 @@ public class DonationPrompt extends Screen {
         // "Donate" button
         ButtonWidget donateButton = ButtonWidget.builder(Text.literal("Donate"), button -> {
                     // Open the donation URL in the default browser
-                    client.setScreen(new ConfirmLinkScreen(confirmed -> {
-                        if (confirmed) {
-                            Util.getOperatingSystem().open("https://ko-fi.com/jellysquid_");
-                        }
-                        client.setScreen(this);
-                    }, "https://ko-fi.com/jellysquid_", true));
+                    client.setScreen(new ConfirmLinkScreen(
+                            confirmed -> {
+                                if (confirmed) {
+                                    Util.getOperatingSystem().open("https://ko-fi.com/jellysquid_");
+                                }
+                                client.setScreen(this);
+                            },
+                            "https://ko-fi.com/jellysquid_",
+                            true));
                 })
                 .dimensions(startX, yPosition, buttonWidth, buttonHeight)
                 .build();
@@ -85,7 +90,7 @@ public class DonationPrompt extends Screen {
         super.render(context, mouseX, mouseY, delta);
 
         // Set the maximum width for text wrapping (e.g., 80% of the screen width)
-        int maxTextWidth = (int)(this.width * 0.8);
+        int maxTextWidth = (int) (this.width * 0.8);
 
         // Wrap the text lines to fit within the maximum width
         List<OrderedText> wrappedLines = new ArrayList<>();
