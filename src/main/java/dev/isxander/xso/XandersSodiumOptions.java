@@ -42,7 +42,7 @@ public class XandersSodiumOptions {
 
             AtomicReference<PlaceholderCategory> shaderPackPage = new AtomicReference<>();
             for (OptionPage page : pages) {
-                var category = convertCategory(page, videoSettingsScreen);
+                var category = convertCategory(page);
 
                 if (category == null)
                     continue;
@@ -111,7 +111,7 @@ public class XandersSodiumOptions {
     }
 
     @Nullable
-    private static ConfigCategory convertCategory(OptionPage page, VideoSettingsScreen videoSettingsScreen) {
+    private static ConfigCategory convertCategory(OptionPage page) {
         try {
             if (Compat.IRIS) {
                 Optional<ConfigCategory> shaderPackPage = IrisCompat.replaceShaderPackPage(page);
