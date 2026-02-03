@@ -24,6 +24,8 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -33,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class XandersSodiumOptions {
     private static boolean errorOccurred = false;
+    private static final Logger LOGGER = LoggerFactory.getLogger("xanders-sodium-options");
 
     public static Screen wrapSodiumScreen(VideoSettingsScreen videoSettingsScreen, List<OptionPage> pages,
             Screen prevScreen) {
@@ -97,7 +100,7 @@ public class XandersSodiumOptions {
             if (XsoConfig.INSTANCE.instance().hardCrash) {
                 throw exception;
             } else {
-                exception.printStackTrace();
+                LOGGER.error("Failed to convert Sodium GUI to YACL", exception);
 
                 return new NoticeScreen(() -> {
                     errorOccurred = true;
@@ -158,7 +161,9 @@ public class XandersSodiumOptions {
             };
         } catch (Exception e) {
             if (XsoConfig.INSTANCE.instance().lenientOptions) {
-                e.printStackTrace();
+                LOGGER.error("Failed to convert Sodium option named '" + sodiumOption.getName().getString()
+                        + "' to YACL option.", e);
+
                 return ButtonOption.createBuilder()
                         .name(sodiumOption.getName())
                         .description(OptionDescription.of(sodiumOption.getTooltip(),
@@ -214,7 +219,7 @@ public class XandersSodiumOptions {
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(validator.min(), validator.max())
                         .step(validator.step())
-                        .formatValue(option::formatValue))
+                        .formatValue(value -> option.formatValue(value)))
                 .build();
     }
 
