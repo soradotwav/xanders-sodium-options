@@ -31,7 +31,7 @@ public class XsoConfig {
 
     public static ConfigCategory getConfigCategory() {
         XsoConfig config = INSTANCE.instance();
-        XsoConfig defaults = INSTANCE.instance();
+        XsoConfig defaults = INSTANCE.defaults();
 
         return ConfigCategory.createBuilder()
                 .name(Text.translatable("xso.title"))
