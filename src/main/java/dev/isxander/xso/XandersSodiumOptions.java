@@ -1,5 +1,7 @@
 package dev.isxander.xso;
 
+import static net.caffeinemc.mods.sodium.api.config.option.OptionFlag.*;
+
 import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.xso.utils.DonationPrompt;
@@ -268,19 +270,15 @@ public class XandersSodiumOptions {
             return flags;
         }
 
-        if (sodiumFlags.contains(
-                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_RENDERER_RELOAD.getId())) {
+        if (sodiumFlags.contains(REQUIRES_RENDERER_RELOAD.getId())) {
             flags.add(OptionFlag.RELOAD_CHUNKS);
-        } else if (sodiumFlags.contains(
-                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_RENDERER_UPDATE.getId())) {
+        } else if (sodiumFlags.contains(REQUIRES_RENDERER_UPDATE.getId())) {
             flags.add(OptionFlag.WORLD_RENDER_UPDATE);
         }
-        if (sodiumFlags.contains(
-                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_ASSET_RELOAD.getId())) {
+        if (sodiumFlags.contains(REQUIRES_ASSET_RELOAD.getId())) {
             flags.add(OptionFlag.ASSET_RELOAD);
         }
-        if (sodiumFlags.contains(
-                net.caffeinemc.mods.sodium.api.config.option.OptionFlag.REQUIRES_GAME_RESTART.getId())) {
+        if (sodiumFlags.contains(REQUIRES_GAME_RESTART.getId())) {
             flags.add(OptionFlag.GAME_RESTART);
         }
 
