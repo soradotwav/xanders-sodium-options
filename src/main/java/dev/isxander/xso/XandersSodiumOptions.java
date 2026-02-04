@@ -40,8 +40,8 @@ public class XandersSodiumOptions {
     public static Screen wrapSodiumScreen(
             VideoSettingsScreen videoSettingsScreen, List<OptionPage> pages, Screen prevScreen) {
         try {
-            YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder()
-                    .title(Text.translatable("options.videoTitle"));
+            YetAnotherConfigLib.Builder builder =
+                    YetAnotherConfigLib.createBuilder().title(Text.translatable("options.videoTitle"));
 
             List<ConfigCategory> categories = new ArrayList<>();
             for (OptionPage page : pages) {
@@ -80,7 +80,8 @@ public class XandersSodiumOptions {
 
                 if (fingerprint != null) {
                     Instant now = Instant.now();
-                    Instant threshold = Instant.ofEpochSecond(fingerprint.timestamp()).plus(3L, ChronoUnit.DAYS);
+                    Instant threshold =
+                            Instant.ofEpochSecond(fingerprint.timestamp()).plus(3L, ChronoUnit.DAYS);
                     if (now.isAfter(threshold)) {
                         options.notifications.hasSeenDonationPrompt = true;
                         try {
@@ -128,7 +129,8 @@ public class XandersSodiumOptions {
                 return null;
             }
 
-            ConfigCategory.Builder categoryBuilder = ConfigCategory.createBuilder().name(page.name());
+            ConfigCategory.Builder categoryBuilder =
+                    ConfigCategory.createBuilder().name(page.name());
 
             for (var group : page.groups()) {
                 categoryBuilder.option(LabelOption.create(Text.empty()));
@@ -138,8 +140,7 @@ public class XandersSodiumOptions {
                 }
             }
 
-            if (Compat.MORE_CULLING)
-                MoreCullingCompat.extendMoreCullingPage(page, categoryBuilder);
+            if (Compat.MORE_CULLING) MoreCullingCompat.extendMoreCullingPage(page, categoryBuilder);
 
             return categoryBuilder.build();
         } catch (Exception e) {
@@ -177,8 +178,7 @@ public class XandersSodiumOptions {
                                 Text.translatable("xso.incompatible.tooltip").formatted(Formatting.RED)))
                         .available(false)
                         .text(Text.translatable("xso.incompatible.button").formatted(Formatting.RED))
-                        .action((screen, opt) -> {
-                        })
+                        .action((screen, opt) -> {})
                         .build();
             } else {
                 throw new IllegalStateException(
@@ -196,8 +196,8 @@ public class XandersSodiumOptions {
         if (option.getImpact() != null) {
             descText = descText.append("\n")
                     .append(Text.translatable(
-                            "sodium.options.performance_impact_string",
-                            option.getImpact().getName())
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -217,8 +217,8 @@ public class XandersSodiumOptions {
         if (option.getImpact() != null) {
             descText = descText.append("\n")
                     .append(Text.translatable(
-                            "sodium.options.performance_impact_string",
-                            option.getImpact().getName())
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -237,15 +237,15 @@ public class XandersSodiumOptions {
                 .build();
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static <E extends Enum<E>> Option<E> convertEnumOption(EnumOption<E> option) {
         MutableText descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
                     .append(Text.translatable(
-                            "sodium.options.performance_impact_string",
-                            option.getImpact().getName())
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
