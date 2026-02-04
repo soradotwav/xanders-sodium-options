@@ -1,5 +1,6 @@
 {
   "xso.title": "Xander's Sodium Options",
+
   "xso.cfg.enabled": "XSO",
   "xso.cfg.enabled.tooltip": "Configures whether XSO should override Sodium's options. When disabled, you can configure this mod through mod menu.",
   "xso.cfg.lenient_opts": "Lenient Options",
@@ -7,8 +8,13 @@
   "xso.cfg.hard_crash": "Hard Crash",
   "xso.cfg.hard_crash.tooltip": "If XSO cannot convert the Sodium GUI for whatever reason, enabling this makes Minecraft crash completely, rather than displaying the warning and giving you the original Sodium GUI. This can be beneficial as it makes Minecraft generate a crash report whereas it only prints to latest.log with this option off.",
 
+  "xso.donation.tooltip": "Support Sodium's Development",
+  "xso.donation.confirm.title": "Support Sodium",
+  "xso.donation.confirm.message": "Your support helps keep Sodium's development active. Would you like to visit their Ko-fi page?",
+
   "xso.incompatible.button": "Option Incompatible",
   "xso.incompatible.tooltip": "This option is currently incompatible with XSO. Please make an issue to get support!",
+
   "options.iris.openShaderPackScreen": "Open Original Screen",
   "options.iris.openShaderPackScreen.description": "If you're having difficulty using this screen to change shaders, you can click this button to access the original Iris shaders screen.",
   "options.iris.downloadShaders": "Download Shaders",

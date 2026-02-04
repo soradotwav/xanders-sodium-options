@@ -4,23 +4,16 @@ import static net.caffeinemc.mods.sodium.api.config.option.OptionFlag.*;
 
 import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
-import dev.isxander.xso.utils.DonationPrompt;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.isxander.yacl3.impl.controller.EnumControllerBuilderImpl;
-import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
 import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
 import net.caffeinemc.mods.sodium.client.config.structure.ExternalButtonOption;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
-import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
-import net.caffeinemc.mods.sodium.client.gui.SodiumOptions;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.NoticeScreen;
@@ -67,33 +60,6 @@ public class XandersSodiumOptions {
                 net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.applyAllOptions();
                 XsoConfig.INSTANCE.save();
             });
-
-            var options = SodiumClientMod.options();
-            if (!options.notifications.hasSeenDonationPrompt) {
-                HashedFingerprint fingerprint = null;
-
-                try {
-                    fingerprint = HashedFingerprint.loadFromDisk();
-                } catch (Throwable var5) {
-                    SodiumClientMod.logger().error("Failed to read the fingerprint from disk", var5);
-                }
-
-                if (fingerprint != null) {
-                    Instant now = Instant.now();
-                    Instant threshold =
-                            Instant.ofEpochSecond(fingerprint.timestamp()).plus(3L, ChronoUnit.DAYS);
-                    if (now.isAfter(threshold)) {
-                        options.notifications.hasSeenDonationPrompt = true;
-                        try {
-                            SodiumOptions.writeToDisk(options);
-                        } catch (IOException var4) {
-                            SodiumClientMod.logger().error("Failed to update config file", var4);
-                        }
-                        return new DonationPrompt(builder.build().generateScreen(prevScreen));
-                    }
-                }
-            }
-
             return builder.build().generateScreen(prevScreen);
         } catch (Exception e) {
             var exception = new IllegalStateException("Failed to convert Sodium option screen to YACL with XSO!", e);
@@ -233,7 +199,7 @@ public class XandersSodiumOptions {
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(validator.min(), validator.max())
                         .step(validator.step())
-                        .formatValue(value -> option.formatValue(value)))
+                        .formatValue(option::formatValue))
                 .build();
     }
 
