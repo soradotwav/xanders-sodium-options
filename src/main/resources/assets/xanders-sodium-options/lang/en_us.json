@@ -24,5 +24,7 @@
   "options.iris.selectedShaderPack.description": "The chosen shaderpack to be loaded by Iris.",
   "options.iris.enableShaders": "Enable Shaders",
   "options.iris.enableShaders.description": "Should Iris enable shader rendering?",
-  "options.iris.shaderPackOptions": "If you want to edit the current shader pack's configuration you will either need to do that through the configuration file or the original Iris Shader Packs configuration screen."
+  "options.iris.shaderPackOptions": "If you want to edit the current shader pack's configuration you will either need to do that through the configuration file or the original Iris Shader Packs configuration screen.",
+
+  "options.moreculling.resetcache.description": "Clears More Culling's internal cache. Useful if you experience visual glitches after changing settings."
 }

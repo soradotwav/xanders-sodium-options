@@ -15,8 +15,8 @@ public class MoreCullingCompat {
                     .name(Text.translatable("moreculling.config.resetCache"))
                     .description(
                             OptionDescription.of(
-                                    Text.literal(
-                                            "Clears More Culling's internal cache. Useful if you experience visual glitches after changing settings.")))
+                                    Text.translatable("options.moreculling.resetcache.description"
+                                            )))
                     .action((screen, button) -> CacheUtils.resetAllCache())
                     .build());
         }
