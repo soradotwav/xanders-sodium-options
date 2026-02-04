@@ -14,10 +14,7 @@ public class MoreCullingCompat {
             builder.option(ButtonOption.createBuilder()
                     .name(Text.translatable("moreculling.config.resetCache"))
                     .text(Text.literal("➔"))
-                    .description(
-                            OptionDescription.of(
-                                    Text.translatable("options.moreculling.resetcache.description"
-                                            )))
+                    .description(OptionDescription.of(Text.translatable("options.moreculling.resetcache.description")))
                     .action((screen, button) -> CacheUtils.resetAllCache())
                     .build());
         }
