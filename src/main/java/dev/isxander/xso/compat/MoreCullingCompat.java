@@ -13,8 +13,10 @@ public class MoreCullingCompat {
         if (page.name().equals(Text.translatable("moreculling.config.category.general"))) {
             builder.option(ButtonOption.createBuilder()
                     .name(Text.translatable("moreculling.config.resetCache"))
-                    .description(OptionDescription.of(Text.literal(
-                            "Clears More Culling's internal cache. Useful if you experience visual glitches after changing settings.")))
+                    .description(
+                            OptionDescription.of(
+                                    Text.literal(
+                                            "Clears More Culling's internal cache. Useful if you experience visual glitches after changing settings.")))
                     .action((screen, button) -> CacheUtils.resetAllCache())
                     .build());
         }
