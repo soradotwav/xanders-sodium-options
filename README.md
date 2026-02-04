@@ -18,3 +18,5 @@ Any other mods which integrate with Sodium's GUI will *likely work* as well. If 
 ![Shader Packs Tab](https://cdn.modrinth.com/data/cached_images/bd03b435cd015724aba603dbe234c57e685b576b_0.webp)
 ![Sodium Extras Tab](https://cdn.modrinth.com/data/sTkQBVyo/images/5b87a021c1c93e1330f0eb64365f93347611a169.png)
 ![More Culling Tab](https://cdn.modrinth.com/data/sTkQBVyo/images/24af3345b35cae3b2548fcb1518d23dc7e0f54a7.png)
+
+Thank you to [Zakku0w0](https://ko-fi.com/zakku0w0/) for the Ko-fi icon art.
