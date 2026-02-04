@@ -19,10 +19,10 @@ public class IrisCompat {
                 .name(Text.translatable("options.iris.selectedShaderPack"))
                 .description(OptionDescription.of(Text.translatable("options.iris.selectedShaderPack.description")))
                 .binding(
-                        Iris.getIrisConfig().getShaderPackName().orElse("N/A"),
-                        () -> Iris.getIrisConfig().getShaderPackName().orElse("N/A"),
+                        Iris.getIrisConfig().getShaderPackName().orElse(""),
+                        () -> Iris.getIrisConfig().getShaderPackName().orElse(""),
                         (val) -> {
-                            if (val.equals("N/A")) val = null;
+                            if (val.isEmpty()) val = null;
                             Iris.getIrisConfig().setShaderPackName(val);
                             try {
                                 Iris.getIrisConfig().save();
