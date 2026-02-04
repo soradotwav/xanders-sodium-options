@@ -1,6 +1,7 @@
 package dev.isxander.xso.config;
 
 import dev.isxander.yacl3.api.ConfigCategory;
+import dev.isxander.yacl3.api.LabelOption;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
@@ -35,6 +36,7 @@ public class XsoConfig {
 
         return ConfigCategory.createBuilder()
                 .name(Text.translatable("xso.title"))
+                .option(LabelOption.create(Text.empty()))
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.enabled"))
                         .description(OptionDescription.of(Text.translatable("xso.cfg.enabled.tooltip")))
