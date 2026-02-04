@@ -13,6 +13,7 @@ public class MoreCullingCompat {
         if (page.name().equals(Text.translatable("moreculling.config.category.general"))) {
             builder.option(ButtonOption.createBuilder()
                     .name(Text.translatable("moreculling.config.resetCache"))
+                    .text(Text.literal("➔"))
                     .description(
                             OptionDescription.of(
                                     Text.translatable("options.moreculling.resetcache.description"

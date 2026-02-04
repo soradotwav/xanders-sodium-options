@@ -232,6 +232,7 @@ public class XandersSodiumOptions {
                 .name(option.getName())
                 .description(OptionDescription.of(option.getTooltip()))
                 .available(option.isEnabled())
+                .text(Text.literal("➔"))
                 .action((screen, opt) -> option.getCurrentScreenConsumer().accept(screen))
                 .build();
     }

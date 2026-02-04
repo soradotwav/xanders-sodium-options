@@ -66,14 +66,17 @@ public class IrisCompat {
 
         return ConfigCategory.createBuilder()
                 .name(Text.translatable("options.iris.shaderPackSelection.title"))
+                .option(LabelOption.create(Text.empty()))
                 .option(ButtonOption.createBuilder()
                         .name(Text.translatable("options.iris.openShaderPackScreen"))
+                        .text(Text.literal("➔"))
                         .description(OptionDescription.of(
                                 Text.translatable("options.iris.openShaderPackScreen.description")))
                         .action((screen, opt) -> MinecraftClient.getInstance().setScreen(new ShaderPackScreen(screen)))
                         .build())
                 .option(ButtonOption.createBuilder()
                         .name(Text.translatable("options.iris.downloadShaders"))
+                        .text(Text.literal("➔"))
                         .description(
                                 OptionDescription.of(Text.translatable("options.iris.downloadShaders.description")))
                         .action((screen, opt) -> MinecraftClient.getInstance()
@@ -89,6 +92,7 @@ public class IrisCompat {
                         .build())
                 .option(ButtonOption.createBuilder()
                         .name(Text.translatable("options.iris.openShaderPackFolder"))
+                        .text(Text.literal("➔"))
                         .description(OptionDescription.of(
                                 Text.translatable("options.iris.openShaderPacksFolder.description")))
                         .action((screen, opt) -> Util.getOperatingSystem()
