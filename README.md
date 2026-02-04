@@ -1,8 +1,8 @@
-[![](https://cdn.imb11.dev/xander.png)](https://discord.gg/TKzfYvmcYh)
-[![](https://cdn.imb11.dev/mineblock%20badge_64h.png)](https://discord.imb11.dev/)
-# Xander's Sodium Options
+# Xander's Sodium Options: Continued
 
-Xander's Sodium Options replaces the Sodium options GUI with a Minecraft-style alternative powered by Yet Another Config Lib.
+**A community continuation of Xander's Sodium Options**, replacing the Sodium options GUI with a Minecraft-style alternative powered by Yet Another Config Lib.
+
+> Originally created by [isXander](https://github.com/isXander). This version supports Minecraft 1.21.6+. Looking for older versions? Check the [original mod page](https://modrinth.com/mod/xanders-sodium-options).
 
 It has a wide range of support for various mods which integrate with Sodium, such as:
 -   [Iris](https://modrinth.com/mod/iris)
@@ -11,7 +11,7 @@ It has a wide range of support for various mods which integrate with Sodium, suc
 -   [Cull Less Leaves](https://modrinth.com/mod/cull-less-leaves)
 -   [EntityViewDistance](https://modrinth.com/mod/entity-view-distance)
 
-Any other mods which integrate with Sodium's GUI will *likely work* as well. If you encounter any issues, please [report them here!](https://github.com/isXander/xanders-sodium-options/issues)
+Any other mods which integrate with Sodium's GUI will *likely work* as well. If you encounter any issues, please [report them here!](https://github.com/soradotwav/xanders-sodium-options/issues) and/or join the [Discord server](https://discord.gg/TKzfYvmcYh).
 
 ### Screenshots
 ![General Tab](https://cdn.modrinth.com/data/sTkQBVyo/images/551cfdb3c962d064b2a1d5bcc475247519104d00.png)

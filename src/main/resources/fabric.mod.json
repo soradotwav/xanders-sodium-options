@@ -2,17 +2,16 @@
   "schemaVersion": 1,
   "id": "xanders-sodium-options",
   "version": "${mod_version}",
-  "name": "Xander's Sodium Options",
-  "description": "Minecraft-style Sodium options using YACL.",
+  "name": "Xander's Sodium Options: Continued",
+  "description": "Replaces the Sodium options GUI with vanilla-style alternatives.",
   "authors": [
     "isXander",
     "IMB11",
     "soradotwav"
   ],
   "contact": {
-    "homepage": "https://IMB11.dev/",
-    "issues": "https://github.com/isXander/xanders-sodium-options/issues",
-    "sources": "https://github.com/isXander/xanders-sodium-options"
+    "issues": "https://github.com/soradotwav/xanders-sodium-options/issues",
+    "sources": "https://github.com/soradotwav/xanders-sodium-options"
   },
   "icon": "icon.png",
   "license": "LGPL-3.0-or-later",
