@@ -3,3 +3,5 @@ build
 /.idea
 .gradle
 !.gitkeep
+.vscode/
+versions/*/bin

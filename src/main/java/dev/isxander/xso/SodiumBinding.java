@@ -1,38 +1,31 @@
 package dev.isxander.xso;
 
-import dev.isxander.xso.mixins.OptionImplAccessor;
 import dev.isxander.yacl3.api.Binding;
+import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
+import net.caffeinemc.mods.sodium.client.config.ConfigManager;
+import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 
-import net.caffeinemc.mods.sodium.client.gui.options.Option;
-import net.caffeinemc.mods.sodium.client.gui.options.OptionImpl;
-import net.caffeinemc.mods.sodium.client.gui.options.binding.OptionBinding;
-import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
+public class SodiumBinding<T> implements Binding<T> {
+    private final OptionBinding<T> sodiumBinding;
+    private final StatefulOption<T> sodiumOption;
 
-public class SodiumBinding<S, T> implements Binding<T> {
-    private final OptionBinding<S, T> sodiumBinding;
-    private final OptionStorage<S> sodiumStorage;
-
-    public SodiumBinding(Option<T> sodiumOption) {
-        this(((OptionImplAccessor<S, T>) (OptionImpl<S, T>) sodiumOption).getBinding(), (OptionStorage<S>) sodiumOption.getStorage());
-    }
-
-    public SodiumBinding(OptionBinding<S, T> sodiumBinding, OptionStorage<S> sodiumStorage) {
-        this.sodiumBinding = sodiumBinding;
-        this.sodiumStorage = sodiumStorage;
+    public SodiumBinding(StatefulOption<T> sodiumOption) {
+        this.sodiumBinding = sodiumOption.getBinding();
+        this.sodiumOption = sodiumOption;
     }
 
     @Override
     public void setValue(T value) {
-        sodiumBinding.setValue(sodiumStorage.getData(), value);
+        sodiumBinding.save(value);
     }
 
     @Override
     public T getValue() {
-        return sodiumBinding.getValue(sodiumStorage.getData());
+        return sodiumBinding.load();
     }
 
     @Override
     public T defaultValue() {
-        return getValue();
+        return sodiumOption.getDefaultValue().get(ConfigManager.CONFIG);
     }
 }

@@ -9,6 +9,9 @@ pluginManagement {
         }
         gradlePluginPortal()
     }
+    plugins {
+        id 'com.diffplug.spotless' version '6.25.0'
+    }
 }
 
 plugins {
@@ -17,8 +20,8 @@ plugins {
 
 stonecutter {
     create(rootProject) {
-        versions '1.21.5', '1.21.3', '1.21.1'
-        vcsVersion = '1.21.5'
+        versions '1.21.11'
+        vcsVersion = '1.21.11'
     }
 }
 
