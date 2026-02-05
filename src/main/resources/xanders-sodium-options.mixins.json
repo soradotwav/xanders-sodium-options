@@ -6,6 +6,8 @@
   "client": [
     "MinecraftClientMixin",
     "VideoSettingsScreenAccessor",
-    "YACLScreenMixin"
+    "YACLScreenMixin",
+    "yacl.TextScaledButtonWidgetMixin"
+
   ]
 }
