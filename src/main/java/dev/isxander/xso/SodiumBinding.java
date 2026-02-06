@@ -32,7 +32,48 @@ public class SodiumBinding<S, T> implements Binding<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T defaultValue() {
+        try {
+            S currentData = sodiumStorage.getData();
+            if (currentData != null) {
+                Class<?> storageClass = currentData.getClass();
+
+                try {
+                    java.lang.reflect.Method defaultsMethod = storageClass.getMethod("defaults");
+                    if (storageClass.isAssignableFrom(defaultsMethod.getReturnType())) {
+                        S defaultData = (S) defaultsMethod.invoke(null);
+                        return sodiumBinding.getValue(defaultData);
+                    }
+                } catch (Exception e) {
+                    /* ignore */ }
+
+                try {
+                    java.lang.reflect.Constructor<?> constructor = storageClass.getDeclaredConstructor();
+                    constructor.setAccessible(true);
+                    S defaultData = (S) constructor.newInstance();
+                    return sodiumBinding.getValue(defaultData);
+                } catch (Exception e) {
+                    /* ignore */ }
+
+                try {
+                    java.lang.reflect.Constructor<?> constructor = storageClass
+                            .getDeclaredConstructor(net.minecraft.client.MinecraftClient.class, java.io.File.class);
+                    constructor.setAccessible(true);
+
+                    java.io.File tempFile = java.io.File.createTempFile("xso_defaults", ".txt");
+                    tempFile.delete();
+
+                    S defaultData = (S) constructor.newInstance(net.minecraft.client.MinecraftClient.getInstance(),
+                            tempFile);
+                    return sodiumBinding.getValue(defaultData);
+                } catch (Exception e) {
+                    /* ignore */
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+        }
         return getValue();
     }
 }
