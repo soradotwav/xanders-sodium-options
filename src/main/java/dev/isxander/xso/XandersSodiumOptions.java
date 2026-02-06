@@ -6,7 +6,7 @@ import dev.isxander.xso.mixins.CyclingControlAccessor;
 import dev.isxander.xso.mixins.OptionImplAccessor;
 import dev.isxander.xso.mixins.SliderControlAccessor;
 import dev.isxander.xso.mixins.DynamicMaxSliderControlAccessor;
-import dev.isxander.xso.utils.DonationPrompt;
+
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
@@ -30,16 +30,11 @@ import net.caffeinemc.mods.sodium.client.gui.options.control.SliderControl;
 import net.caffeinemc.mods.sodium.client.gui.options.control.DynamicMaxSliderControl;
 import net.caffeinemc.mods.sodium.client.gui.options.control.TickBoxControl;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
-import net.caffeinemc.mods.sodium.client.SodiumClientMod;
-import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
-import net.caffeinemc.mods.sodium.client.gui.SodiumGameOptions;
+
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class XandersSodiumOptions {
@@ -80,31 +75,6 @@ public class XandersSodiumOptions {
 
                 XsoConfig.INSTANCE.save();
             });
-
-            var options = SodiumClientMod.options();
-            if (!options.notifications.hasSeenDonationPrompt) {
-                HashedFingerprint fingerprint = null;
-
-                try {
-                    fingerprint = HashedFingerprint.loadFromDisk();
-                } catch (Throwable var5) {
-                    SodiumClientMod.logger().error("Failed to read the fingerprint from disk", var5);
-                }
-
-                if (fingerprint != null) {
-                    Instant now = Instant.now();
-                    Instant threshold = Instant.ofEpochSecond(fingerprint.timestamp()).plus(3L, ChronoUnit.DAYS);
-                    if (now.isAfter(threshold)) {
-                        options.notifications.hasSeenDonationPrompt = true;
-                        try {
-                            SodiumGameOptions.writeToDisk(options);
-                        } catch (IOException var4) {
-                            SodiumClientMod.logger().error("Failed to update config file", var4);
-                        }
-                        return new DonationPrompt(builder.build().generateScreen(prevScreen));
-                    }
-                }
-            }
 
             return builder.build().generateScreen(prevScreen);
         } catch (Exception e) {

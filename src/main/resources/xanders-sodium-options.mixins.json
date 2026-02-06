@@ -15,6 +15,7 @@
     "compat.moreculling.MoreCullingOptionImplBuilderMixin",
     "compat.moreculling.MoreCullingOptionImplMixin",
     "compat.moreculling.MoreCullingSodiumOptionImplAccessor",
-    "compat.sodiumextra.SliderControlExtAccessor"
+    "compat.sodiumextra.SliderControlExtAccessor",
+    "YACLScreenMixin"
   ]
 }

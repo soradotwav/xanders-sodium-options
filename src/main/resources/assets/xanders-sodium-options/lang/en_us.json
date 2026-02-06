@@ -8,6 +8,10 @@
   "xso.cfg.hard_crash": "Hard Crash",
   "xso.cfg.hard_crash.tooltip": "If XSO cannot convert the Sodium GUI for whatever reason, enabling this makes Minecraft crash completely, rather than displaying the warning and giving you the original Sodium GUI. This can be beneficial as it makes Minecraft generate a crash report whereas it only prints to latest.log with this option off.",
 
+  "xso.donation.tooltip": "Support Sodium's Development",
+  "xso.donation.confirm.title": "Support Sodium",
+  "xso.donation.confirm.message": "Your support helps keep Sodium's development active. Would you like to visit their Ko-fi page?",
+
   "xso.incompatible.button": "Option Incompatible",
   "xso.incompatible.tooltip": "This option is currently incompatible with XSO. Please make an issue to get support!",
 
