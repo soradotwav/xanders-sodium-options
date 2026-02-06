@@ -3,11 +3,13 @@ package dev.isxander.xso;
 import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.xso.mixins.CyclingControlAccessor;
+import dev.isxander.xso.mixins.OptionImplAccessor;
 import dev.isxander.xso.mixins.SliderControlAccessor;
 import dev.isxander.xso.mixins.DynamicMaxSliderControlAccessor;
-import dev.isxander.xso.utils.ClassCapture;
 import dev.isxander.xso.utils.DonationPrompt;
 import dev.isxander.yacl3.api.*;
+import dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder;
+import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.isxander.yacl3.impl.controller.EnumControllerBuilderImpl;
@@ -39,7 +41,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class XandersSodiumOptions {
     private static boolean errorOccurred = false;
@@ -49,26 +50,27 @@ public class XandersSodiumOptions {
             Screen prevScreen) {
         try {
             YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder()
-                    .title(Text.translatable("Sodium Options"));
+                    .title(Text.translatable("options.videoTitle"));
 
-            AtomicReference<PlaceholderCategory> shaderPackPage = new AtomicReference<>();
+            List<ConfigCategory> categories = new ArrayList<>();
             for (OptionPage page : pages) {
                 var category = convertCategory(page, sodiumOptionsGUI);
 
                 if (category == null)
                     continue;
-                if (category instanceof PlaceholderCategory placeholderCategory) {
-                    shaderPackPage.set(placeholderCategory);
-                    continue;
-                }
 
-                builder.category(category);
+                categories.add(category);
             }
 
-            builder.category(XsoConfig.getConfigCategory());
+            if (Compat.IRIS) {
+                int insertPosition = Math.min(4, categories.size());
+                categories.add(insertPosition, IrisCompat.createShaderPacksCategory());
+            }
 
-            if (shaderPackPage.get() != null) {
-                builder.category(shaderPackPage.get());
+            categories.add(XsoConfig.getConfigCategory());
+
+            for (ConfigCategory category : categories) {
+                builder.category(category);
             }
 
             builder.save(() -> {
@@ -128,9 +130,9 @@ public class XandersSodiumOptions {
     private static ConfigCategory convertCategory(OptionPage page, SodiumOptionsGUI sodiumOptionsGUI) {
         try {
             if (Compat.IRIS) {
-                Optional<ConfigCategory> shaderPackPage = IrisCompat.replaceShaderPackPage(sodiumOptionsGUI, page);
-                if (shaderPackPage.isPresent()) {
-                    return shaderPackPage.get();
+                if (IrisCompat.isIrisSettingsPage(page.getName())
+                        || page.getName().contains(Text.translatable("options.iris.shaderPackSelection"))) {
+                    return null;
                 }
             }
 
@@ -185,7 +187,8 @@ public class XandersSodiumOptions {
             return built;
         } catch (Exception e) {
             if (XsoConfig.INSTANCE.instance().lenientOptions) {
-                LOGGER.error("Failed to convert Sodium option named '{}' to YACL option.", sodiumOption.getName().getString(), e);
+                LOGGER.error("Failed to convert Sodium option named '{}' to YACL option.",
+                        sodiumOption.getName().getString(), e);
 
                 return ButtonOption.createBuilder()
                         .name(sodiumOption.getName())
@@ -229,23 +232,10 @@ public class XandersSodiumOptions {
             return;
         }
 
-        if (sodiumOption.getControl() instanceof SliderControl sliderControl) {
-            SliderControlAccessor accessor = (SliderControlAccessor) sliderControl;
-            yaclOption.controller(
-                    opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) IntegerSliderControllerBuilder
-                            .create((Option<Integer>) opt).step(accessor.getInterval())
-                            .range(accessor.getMin(), accessor.getMax())
-                            .formatValue(value -> accessor.getMode().format(value)));
-            return;
-        }
-
         if (sodiumOption.getControl() instanceof DynamicMaxSliderControl dynamicMaxSliderControl) {
             DynamicMaxSliderControlAccessor accessor = (DynamicMaxSliderControlAccessor) dynamicMaxSliderControl;
-            yaclOption.controller(
-                    opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) IntegerSliderControllerBuilder
-                            .create((Option<Integer>) opt).step(accessor.getInterval())
-                            .range(accessor.getMin(), accessor.getMax().getAsInt())
-                            .formatValue(value -> accessor.getMode().format(value)));
+            addSliderController(yaclOption, sodiumOption, accessor.getMin(), accessor.getMax().getAsInt(),
+                    accessor.getInterval(), accessor.getMode());
             return;
         }
 
@@ -253,8 +243,45 @@ public class XandersSodiumOptions {
             return;
         }
 
+        if (sodiumOption.getControl() instanceof SliderControl sliderControl) {
+            SliderControlAccessor accessor = (SliderControlAccessor) sliderControl;
+            addSliderController(yaclOption, sodiumOption, accessor.getMin(), accessor.getMax(), accessor.getInterval(),
+                    accessor.getMode());
+            return;
+        }
+
         throw new IllegalStateException(
                 "Unsupported Sodium Controller: " + sodiumOption.getControl().getClass().getName());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> void addSliderController(dev.isxander.yacl3.api.Option.Builder<T> yaclOption,
+            net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption, int min, int max, int interval,
+            net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatter mode) {
+        T initialValue = ((OptionImplAccessor<Object, T>) sodiumOption).getBinding()
+                .getValue(sodiumOption.getStorage().getData());
+        if (initialValue instanceof Float) {
+            yaclOption.controller(
+                    opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) FloatSliderControllerBuilder
+                            .create((Option<Float>) opt)
+                            .range((float) min, (float) max)
+                            .step((float) interval)
+                            .formatValue(v -> mode.format(v.intValue())));
+        } else if (initialValue instanceof Double) {
+            yaclOption.controller(
+                    opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) DoubleSliderControllerBuilder
+                            .create((Option<Double>) opt)
+                            .range((double) min, (double) max)
+                            .step((double) interval)
+                            .formatValue(v -> mode.format(v.intValue())));
+        } else {
+            yaclOption.controller(
+                    opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) IntegerSliderControllerBuilder
+                            .create((Option<Integer>) opt)
+                            .range(min, max)
+                            .step(interval)
+                            .formatValue(mode::format));
+        }
     }
 
     private static List<OptionFlag> convertFlags(net.caffeinemc.mods.sodium.client.gui.options.Option<?> sodiumOption) {
