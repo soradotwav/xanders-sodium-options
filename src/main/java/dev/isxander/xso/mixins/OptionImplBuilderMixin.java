@@ -2,11 +2,10 @@ package dev.isxander.xso.mixins;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.isxander.xso.utils.ClassCapture;
+import net.caffeinemc.mods.sodium.client.gui.options.OptionImpl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-
-import net.caffeinemc.mods.sodium.client.gui.options.OptionImpl;
 
 @Mixin(value = OptionImpl.Builder.class, remap = false)
 public class OptionImplBuilderMixin<S, T> implements ClassCapture<T> {

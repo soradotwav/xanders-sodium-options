@@ -2,13 +2,11 @@ package dev.isxander.xso;
 
 import dev.isxander.xso.mixins.OptionImplAccessor;
 import dev.isxander.yacl3.api.Binding;
-
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.caffeinemc.mods.sodium.client.gui.options.Option;
 import net.caffeinemc.mods.sodium.client.gui.options.binding.OptionBinding;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class SodiumBinding<S, T> implements Binding<T> {
     private static final Map<Class<?>, Object> DEFAULT_DATA_CACHE = new ConcurrentHashMap<>();
@@ -44,8 +42,8 @@ public class SodiumBinding<S, T> implements Binding<T> {
             if (currentData != null) {
                 Class<?> storageClass = currentData.getClass();
 
-                S defaultData = (S) DEFAULT_DATA_CACHE.computeIfAbsent(storageClass,
-                        SodiumBinding::createDefaultInstance);
+                S defaultData =
+                        (S) DEFAULT_DATA_CACHE.computeIfAbsent(storageClass, SodiumBinding::createDefaultInstance);
                 if (defaultData != null) {
                     return sodiumBinding.getValue(defaultData);
                 }
@@ -76,8 +74,8 @@ public class SodiumBinding<S, T> implements Binding<T> {
         }
 
         try {
-            java.lang.reflect.Constructor<?> constructor = storageClass
-                    .getDeclaredConstructor(net.minecraft.client.MinecraftClient.class, java.io.File.class);
+            java.lang.reflect.Constructor<?> constructor =
+                    storageClass.getDeclaredConstructor(net.minecraft.client.MinecraftClient.class, java.io.File.class);
             constructor.setAccessible(true);
 
             java.io.File tempFile = java.io.File.createTempFile("xso_defaults", ".txt");

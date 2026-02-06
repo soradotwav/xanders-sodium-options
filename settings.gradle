@@ -9,6 +9,9 @@ pluginManagement {
         }
         gradlePluginPortal()
     }
+    plugins {
+        id 'com.diffplug.spotless' version '6.25.0'
+    }
 }
 
 plugins {

@@ -7,10 +7,16 @@ import me.flashyreese.mods.sodiumextra.client.gui.options.control.SliderControlE
 
 public class SodiumExtraCompat {
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static <T> boolean convertControl(dev.isxander.yacl3.api.Option.Builder<T> yaclOption, net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption) {
+    public static <T> boolean convertControl(
+            dev.isxander.yacl3.api.Option.Builder<T> yaclOption,
+            net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption) {
         if (sodiumOption.getControl() instanceof SliderControlExtended sliderControl) {
             SliderControlExtAccessor accessor = (SliderControlExtAccessor) sliderControl;
-            yaclOption.controller(opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) IntegerSliderControllerBuilder.create((Option<Integer>) opt).range(accessor.getMin(), accessor.getMax()).step(accessor.getInterval()).formatValue(value -> accessor.getMode().format(value)));
+            yaclOption.controller(opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>)
+                    IntegerSliderControllerBuilder.create((Option<Integer>) opt)
+                            .range(accessor.getMin(), accessor.getMax())
+                            .step(accessor.getInterval())
+                            .formatValue(value -> accessor.getMode().format(value)));
             return true;
         }
 

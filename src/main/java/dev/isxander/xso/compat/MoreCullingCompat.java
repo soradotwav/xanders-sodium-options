@@ -10,15 +10,15 @@ import net.caffeinemc.mods.sodium.client.gui.SodiumOptionsGUI;
 import net.caffeinemc.mods.sodium.client.gui.options.Option;
 import net.caffeinemc.mods.sodium.client.gui.options.OptionPage;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
-
 import net.minecraft.text.Text;
 
 public class MoreCullingCompat {
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public static <S, T> SodiumBinding<S, T> getBinding(Option<T> option) {
         if (isMoreCullingOption(option)) {
-            return new SodiumBinding<>(((MoreCullingSodiumOptionImplAccessor<S, T>) option).getBinding(),
+            return new SodiumBinding<>(
+                    ((MoreCullingSodiumOptionImplAccessor<S, T>) option).getBinding(),
                     (OptionStorage<S>) option.getStorage());
         } else {
             return new SodiumBinding<>(option);
@@ -29,16 +29,15 @@ public class MoreCullingCompat {
         return option instanceof MoreCullingSodiumOptionImpl<?, ?>;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public static <T> void addAvailableCheck(dev.isxander.yacl3.api.Option<T> yaclOption, Option<T> sodiumOption) {
-        if (!(sodiumOption instanceof MoreCullingSodiumOptionImpl<?, ?>))
-            return;
+        if (!(sodiumOption instanceof MoreCullingSodiumOptionImpl<?, ?>)) return;
 
         ((OptionHolder<T>) sodiumOption).holdOption(yaclOption);
     }
 
-    public static void extendMoreCullingPage(SodiumOptionsGUI optionsGUI, OptionPage page,
-            ConfigCategory.Builder builder) {
+    public static void extendMoreCullingPage(
+            SodiumOptionsGUI optionsGUI, OptionPage page, ConfigCategory.Builder builder) {
         if (page.getName().getString().equals("MoreCulling")) {
             builder.option(dev.isxander.yacl3.api.ButtonOption.createBuilder()
                     .name(Text.translatable("moreculling.config.resetCache"))
@@ -52,5 +51,4 @@ public class MoreCullingCompat {
     public interface OptionHolder<T> {
         void holdOption(dev.isxander.yacl3.api.Option<T> option);
     }
-
 }

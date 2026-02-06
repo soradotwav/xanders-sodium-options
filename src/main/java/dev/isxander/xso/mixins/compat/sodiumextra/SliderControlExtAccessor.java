@@ -1,11 +1,10 @@
 package dev.isxander.xso.mixins.compat.sodiumextra;
 
 import me.flashyreese.mods.sodiumextra.client.gui.options.control.SliderControlExtended;
+import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.gen.Accessor;
-
-import net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatter;
 
 @Pseudo
 @Mixin(SliderControlExtended.class)

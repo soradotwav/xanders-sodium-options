@@ -44,8 +44,7 @@ public abstract class YACLScreenMixin extends Screen {
         }
 
         if (searchField != null) {
-            if (this.xso$donationButton != null && this.children().contains(this.xso$donationButton))
-                return;
+            if (this.xso$donationButton != null && this.children().contains(this.xso$donationButton)) return;
 
             int buttonSize = 20;
             int spacing = 4;

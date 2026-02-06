@@ -46,14 +46,21 @@ public class XsoConfig {
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.lenient_opts"))
                         .description(OptionDescription.of(Text.translatable("xso.cfg.lenient_opts.tooltip")))
-                        .binding(defaults.lenientOptions, () -> config.lenientOptions, val -> config.lenientOptions = val)
-                        .controller(opt -> BooleanControllerBuilder.create(opt).yesNoFormatter().coloured(false))
+                        .binding(
+                                defaults.lenientOptions,
+                                () -> config.lenientOptions,
+                                val -> config.lenientOptions = val)
+                        .controller(opt -> BooleanControllerBuilder.create(opt)
+                                .yesNoFormatter()
+                                .coloured(false))
                         .build())
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.hard_crash"))
                         .description(OptionDescription.of(Text.translatable("xso.cfg.hard_crash.tooltip")))
                         .binding(defaults.hardCrash, () -> config.hardCrash, val -> config.hardCrash = val)
-                        .controller(opt -> BooleanControllerBuilder.create(opt).yesNoFormatter().coloured(false))
+                        .controller(opt -> BooleanControllerBuilder.create(opt)
+                                .yesNoFormatter()
+                                .coloured(false))
                         .build())
                 .build();
     }
