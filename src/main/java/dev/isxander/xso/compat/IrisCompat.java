@@ -6,11 +6,8 @@ import dev.isxander.yacl3.impl.controller.DropdownStringControllerBuilderImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
-import net.irisshaders.iris.parsing.IrisOptions;
-import net.irisshaders.iris.shaderpack.option.ShaderPackOptions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmLinkScreen;
-import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptionsGUI;
@@ -106,9 +103,5 @@ public class IrisCompat {
         }
 
         return Optional.empty();
-    }
-
-    public interface ShaderPageHolder {
-        OptionPage getShaderPage();
     }
 }

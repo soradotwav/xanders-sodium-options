@@ -14,6 +14,7 @@ public class OptionImplMixin<S, T> implements ClassCapture<T> {
     @Unique
     private Class<T> xso$capturedClass = null;
 
+    @SuppressWarnings("unchecked")
     @ModifyReturnValue(method = "createBuilder", at = @At("RETURN"))
     private static <S, T> OptionImpl.Builder<S, T> passClassToBuilder(OptionImpl.Builder<S, T> builder, Class<T> type, OptionStorage<S> storage) {
         ((ClassCapture<T>) builder).setCapturedClass(type);

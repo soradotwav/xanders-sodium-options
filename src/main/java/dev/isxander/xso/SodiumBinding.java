@@ -12,6 +12,7 @@ public class SodiumBinding<S, T> implements Binding<T> {
     private final OptionBinding<S, T> sodiumBinding;
     private final OptionStorage<S> sodiumStorage;
 
+    @SuppressWarnings("unchecked")
     public SodiumBinding(Option<T> sodiumOption) {
         this(((OptionImplAccessor<S, T>) (OptionImpl<S, T>) sodiumOption).getBinding(), (OptionStorage<S>) sodiumOption.getStorage());
     }

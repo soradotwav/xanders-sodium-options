@@ -16,9 +16,8 @@ public class MinecraftClientMixin {
     private Screen modifyScreen(Screen screen) {
         if (XandersSodiumOptions.shouldConvertGui() && screen instanceof SodiumOptionsGUI sodiumOptionsGUI) {
             var accessor = (SodiumOptionsGUIAccessor) sodiumOptionsGUI;
-            var target = XandersSodiumOptions.wrapSodiumScreen(sodiumOptionsGUI, accessor.getPages(), accessor.getPrevScreen());
 
-            return target;
+            return XandersSodiumOptions.wrapSodiumScreen(sodiumOptionsGUI, accessor.getPages(), accessor.getPrevScreen());
         }
 
         return screen;

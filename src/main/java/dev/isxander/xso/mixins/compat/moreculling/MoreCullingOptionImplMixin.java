@@ -23,7 +23,7 @@ public abstract class MoreCullingOptionImplMixin<S, T> implements ClassCapture<T
     @Unique
     private Option<T> xso$heldOption = null;
 
-    @SuppressWarnings("InvalidInjectorMethodSignature")
+    @SuppressWarnings("unchecked")
     @ModifyReturnValue(method = "createBuilder", at = @At("RETURN"))
     private static <S, T> MoreCullingSodiumOptionImpl.Builder<S, T> passClassToBuilder(MoreCullingSodiumOptionImpl.Builder<S, T> builder, Class<T> type, OptionStorage<S> storage) {
         ((ClassCapture<T>) builder).setCapturedClass(type);

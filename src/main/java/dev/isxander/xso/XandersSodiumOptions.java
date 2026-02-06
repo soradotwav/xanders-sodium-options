@@ -32,6 +32,8 @@ import net.caffeinemc.mods.sodium.client.SodiumClientMod;
 import net.caffeinemc.mods.sodium.client.data.fingerprint.HashedFingerprint;
 import net.caffeinemc.mods.sodium.client.gui.SodiumGameOptions;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -40,7 +42,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class XandersSodiumOptions {
-    private static boolean errorOccured = false;
+    private static boolean errorOccurred = false;
+    private static final Logger LOGGER = LoggerFactory.getLogger("xanders-sodium-options");
 
     public static Screen wrapSodiumScreen(SodiumOptionsGUI sodiumOptionsGUI, List<OptionPage> pages,
             Screen prevScreen) {
@@ -83,8 +86,7 @@ public class XandersSodiumOptions {
                 try {
                     fingerprint = HashedFingerprint.loadFromDisk();
                 } catch (Throwable var5) {
-                    Throwable t = var5;
-                    SodiumClientMod.logger().error("Failed to read the fingerprint from disk", t);
+                    SodiumClientMod.logger().error("Failed to read the fingerprint from disk", var5);
                 }
 
                 if (fingerprint != null) {
@@ -95,8 +97,7 @@ public class XandersSodiumOptions {
                         try {
                             SodiumGameOptions.writeToDisk(options);
                         } catch (IOException var4) {
-                            IOException e = var4;
-                            SodiumClientMod.logger().error("Failed to update config file", e);
+                            SodiumClientMod.logger().error("Failed to update config file", var4);
                         }
                         return new DonationPrompt(builder.build().generateScreen(prevScreen));
                     }
@@ -110,14 +111,14 @@ public class XandersSodiumOptions {
             if (XsoConfig.INSTANCE.instance().hardCrash) {
                 throw exception;
             } else {
-                exception.printStackTrace();
+                LOGGER.error("Failed to convert Sodium GUI to YACL", exception);
 
                 return new NoticeScreen(() -> {
-                    errorOccured = true;
+                    errorOccurred = true;
                     MinecraftClient.getInstance().setScreen(sodiumOptionsGUI);
-                    errorOccured = false;
+                    errorOccurred = false;
                 }, Text.literal("Xander's Sodium Options failed"), Text.literal(
-                        "Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occured which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."),
+                        "Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occurred which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."),
                         ScreenTexts.PROCEED, true);
             }
         }
@@ -160,19 +161,9 @@ public class XandersSodiumOptions {
 
     private static <T> Option<?> convertOption(net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption) {
         try {
-            if (sodiumOption.getName().contains(Text.of("Fullscreen Resolution"))) {
-                // Halt debugger so i can step by step
-                System.out.println("debug");
-            }
-
-            if (!(sodiumOption instanceof ClassCapture<?>)) {
-                throw new IllegalStateException(
-                        "Failed to capture class of sodium option! Likely due to custom Option implementation.");
-            }
-
             MutableText descText = sodiumOption.getTooltip().copy();
 
-            Option.Builder<T> builder = Option.createBuilder(((ClassCapture<T>) sodiumOption).getCapturedClass())
+            Option.Builder<T> builder = Option.<T>createBuilder()
                     .name(sodiumOption.getName())
                     .flags(convertFlags(sodiumOption))
                     .binding(Compat.MORE_CULLING ? MoreCullingCompat.getBinding(sodiumOption)
@@ -194,8 +185,8 @@ public class XandersSodiumOptions {
             return built;
         } catch (Exception e) {
             if (XsoConfig.INSTANCE.instance().lenientOptions) {
-                System.out.println("Failed: " + sodiumOption.getName().getString());
-                e.printStackTrace();
+                LOGGER.error("Failed to convert Sodium option named '{}' to YACL option.", sodiumOption.getName().getString(), e);
+
                 return ButtonOption.createBuilder()
                         .name(sodiumOption.getName())
                         .description(OptionDescription.of(sodiumOption.getTooltip(),
@@ -291,6 +282,6 @@ public class XandersSodiumOptions {
     }
 
     public static boolean shouldConvertGui() {
-        return XsoConfig.INSTANCE.instance().enabled && !errorOccured;
+        return XsoConfig.INSTANCE.instance().enabled && !errorOccurred;
     }
 }

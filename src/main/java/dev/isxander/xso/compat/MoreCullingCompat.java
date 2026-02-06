@@ -14,6 +14,8 @@ import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
 import net.minecraft.text.Text;
 
 public class MoreCullingCompat {
+
+    @SuppressWarnings({"unchecked"})
     public static <S, T> SodiumBinding<S, T> getBinding(Option<T> option) {
         if (option instanceof MoreCullingSodiumOptionImpl<?, ?> moreCullingOption) {
             return new SodiumBinding<>(((MoreCullingSodiumOptionImplAccessor<S, T>) moreCullingOption).getBinding(), (OptionStorage<S>) moreCullingOption.getStorage());

@@ -14,6 +14,7 @@ public class MoreCullingOptionImplBuilderMixin<S, T> implements ClassCapture<T> 
     @Unique
     private Class<T> xso$capturedClass = null;
 
+    @SuppressWarnings("unchecked")
     @ModifyReturnValue(method = "build", at = @At("RETURN"))
     private MoreCullingSodiumOptionImpl<S, T> captureBuiltClass(MoreCullingSodiumOptionImpl<S, T> result) {
         ((ClassCapture<T>) result).setCapturedClass(getCapturedClass());
