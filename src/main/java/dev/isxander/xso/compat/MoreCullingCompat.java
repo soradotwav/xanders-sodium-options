@@ -5,7 +5,7 @@ import ca.fxco.moreculling.utils.CacheUtils;
 import dev.isxander.xso.SodiumBinding;
 import dev.isxander.xso.mixins.compat.moreculling.MoreCullingSodiumOptionImplAccessor;
 import dev.isxander.yacl3.api.ConfigCategory;
-
+import dev.isxander.yacl3.api.OptionDescription;
 import net.caffeinemc.mods.sodium.client.gui.SodiumOptionsGUI;
 import net.caffeinemc.mods.sodium.client.gui.options.Option;
 import net.caffeinemc.mods.sodium.client.gui.options.OptionPage;
@@ -15,28 +15,35 @@ import net.minecraft.text.Text;
 
 public class MoreCullingCompat {
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked" })
     public static <S, T> SodiumBinding<S, T> getBinding(Option<T> option) {
-        if (option instanceof MoreCullingSodiumOptionImpl<?, ?> moreCullingOption) {
-            return new SodiumBinding<>(((MoreCullingSodiumOptionImplAccessor<S, T>) moreCullingOption).getBinding(), (OptionStorage<S>) moreCullingOption.getStorage());
+        if (isMoreCullingOption(option)) {
+            return new SodiumBinding<>(((MoreCullingSodiumOptionImplAccessor<S, T>) option).getBinding(),
+                    (OptionStorage<S>) option.getStorage());
         } else {
             return new SodiumBinding<>(option);
         }
     }
 
-    @SuppressWarnings({"unchecked"})
+    public static boolean isMoreCullingOption(Option<?> option) {
+        return option instanceof MoreCullingSodiumOptionImpl<?, ?>;
+    }
+
+    @SuppressWarnings({ "unchecked" })
     public static <T> void addAvailableCheck(dev.isxander.yacl3.api.Option<T> yaclOption, Option<T> sodiumOption) {
-        if (!(sodiumOption instanceof MoreCullingSodiumOptionImpl<?,?>))
+        if (!(sodiumOption instanceof MoreCullingSodiumOptionImpl<?, ?>))
             return;
 
         ((OptionHolder<T>) sodiumOption).holdOption(yaclOption);
     }
 
-    public static void extendMoreCullingPage(SodiumOptionsGUI optionsGUI, OptionPage page, ConfigCategory.Builder builder) {
-        MoreCullingPageHolder shaderPageHolder = (MoreCullingPageHolder) optionsGUI;
-        if (shaderPageHolder.getMoreCullingPage() == page) {
+    public static void extendMoreCullingPage(SodiumOptionsGUI optionsGUI, OptionPage page,
+            ConfigCategory.Builder builder) {
+        if (page.getName().getString().equals("MoreCulling")) {
             builder.option(dev.isxander.yacl3.api.ButtonOption.createBuilder()
                     .name(Text.translatable("moreculling.config.resetCache"))
+                    .description(OptionDescription.of(Text.translatable("options.moreculling.resetcache.description")))
+                    .text(Text.literal("➔"))
                     .action((screen, button) -> CacheUtils.resetAllCache())
                     .build());
         }
@@ -46,7 +53,4 @@ public class MoreCullingCompat {
         void holdOption(dev.isxander.yacl3.api.Option<T> option);
     }
 
-    public interface MoreCullingPageHolder {
-        OptionPage getMoreCullingPage();
-    }
 }

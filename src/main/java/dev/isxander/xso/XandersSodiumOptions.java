@@ -258,8 +258,13 @@ public class XandersSodiumOptions {
     private static <T> void addSliderController(dev.isxander.yacl3.api.Option.Builder<T> yaclOption,
             net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption, int min, int max, int interval,
             net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatter mode) {
-        T initialValue = ((OptionImplAccessor<Object, T>) sodiumOption).getBinding()
-                .getValue(sodiumOption.getStorage().getData());
+        T initialValue = null;
+        if (Compat.MORE_CULLING && MoreCullingCompat.isMoreCullingOption(sodiumOption)) {
+            initialValue = (T) MoreCullingCompat.getBinding(sodiumOption).getValue();
+        } else if (sodiumOption instanceof net.caffeinemc.mods.sodium.client.gui.options.OptionImpl) {
+            initialValue = ((OptionImplAccessor<Object, T>) sodiumOption).getBinding()
+                    .getValue(sodiumOption.getStorage().getData());
+        }
         if (initialValue instanceof Float) {
             yaclOption.controller(
                     opt -> (dev.isxander.yacl3.api.controller.ControllerBuilder<T>) FloatSliderControllerBuilder
