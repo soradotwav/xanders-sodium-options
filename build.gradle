@@ -39,7 +39,10 @@ dependencies {
     mappings "net.fabricmc:yarn:${property('deps.yarn')}:v2"
 
     modImplementation "net.fabricmc:fabric-loader:${property("deps.fabric_loader")}"
-    modRuntimeOnly "net.fabricmc.fabric-api:fabric-api:${property('deps.fabric')}"
+    def fabricApi = property('deps.fabric')
+    def fabricApiRuntime = project.hasProperty('deps.fabric.runtime') ? property('deps.fabric.runtime') : fabricApi
+    modCompileOnly "net.fabricmc.fabric-api:fabric-api:$fabricApi"
+    modRuntimeOnly "net.fabricmc.fabric-api:fabric-api:$fabricApiRuntime"
 
     include modImplementation("dev.isxander:yet-another-config-lib:${property('deps.yacl')}") {
         // Remove any fabric API modules.

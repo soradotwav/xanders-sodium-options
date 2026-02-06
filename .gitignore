@@ -4,3 +4,6 @@ build
 .gradle
 !.gitkeep
 .vscode/
+**/bin/
+**/.eclipse
+.DS_Store
