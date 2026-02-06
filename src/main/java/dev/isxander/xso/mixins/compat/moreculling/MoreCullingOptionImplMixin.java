@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Pseudo
 @Mixin(value = MoreCullingSodiumOptionImpl.class, remap = false)
-public abstract class MoreCullingOptionImplMixin<S, T> implements ClassCapture<T>, MoreCullingCompat.OptionHolder<T> {
+public abstract class MoreCullingOptionImplMixin<T> implements ClassCapture<T>, MoreCullingCompat.OptionHolder<T> {
     @Unique
     private Class<T> xso$capturedClass = null;
 

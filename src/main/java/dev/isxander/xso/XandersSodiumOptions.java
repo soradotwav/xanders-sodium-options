@@ -45,7 +45,7 @@ public class XandersSodiumOptions {
 
             List<ConfigCategory> categories = new ArrayList<>();
             for (OptionPage page : pages) {
-                var category = convertCategory(page, sodiumOptionsGUI);
+                var category = convertCategory(page);
 
                 if (category == null) continue;
 
@@ -96,7 +96,7 @@ public class XandersSodiumOptions {
     }
 
     @Nullable
-    private static ConfigCategory convertCategory(OptionPage page, SodiumOptionsGUI sodiumOptionsGUI) {
+    private static ConfigCategory convertCategory(OptionPage page) {
         try {
             if (Compat.IRIS) {
                 if (IrisCompat.isIrisSettingsPage(page.getName())
@@ -120,7 +120,7 @@ public class XandersSodiumOptions {
                 }
             }
 
-            if (Compat.MORE_CULLING) MoreCullingCompat.extendMoreCullingPage(sodiumOptionsGUI, page, categoryBuilder);
+            if (Compat.MORE_CULLING) MoreCullingCompat.extendMoreCullingPage(page, categoryBuilder);
 
             return categoryBuilder.build();
         } catch (Exception e) {
@@ -252,7 +252,7 @@ public class XandersSodiumOptions {
             net.caffeinemc.mods.sodium.client.gui.options.control.ControlValueFormatter mode) {
         T initialValue = null;
         if (Compat.MORE_CULLING && MoreCullingCompat.isMoreCullingOption(sodiumOption)) {
-            initialValue = (T) MoreCullingCompat.getBinding(sodiumOption).getValue();
+            initialValue = MoreCullingCompat.getBinding(sodiumOption).getValue();
         } else if (sodiumOption instanceof net.caffeinemc.mods.sodium.client.gui.options.OptionImpl) {
             initialValue = ((OptionImplAccessor<Object, T>) sodiumOption)
                     .getBinding()

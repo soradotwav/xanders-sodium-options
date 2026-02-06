@@ -6,7 +6,6 @@ import dev.isxander.xso.SodiumBinding;
 import dev.isxander.xso.mixins.compat.moreculling.MoreCullingSodiumOptionImplAccessor;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.OptionDescription;
-import net.caffeinemc.mods.sodium.client.gui.SodiumOptionsGUI;
 import net.caffeinemc.mods.sodium.client.gui.options.Option;
 import net.caffeinemc.mods.sodium.client.gui.options.OptionPage;
 import net.caffeinemc.mods.sodium.client.gui.options.storage.OptionStorage;
@@ -36,8 +35,7 @@ public class MoreCullingCompat {
         ((OptionHolder<T>) sodiumOption).holdOption(yaclOption);
     }
 
-    public static void extendMoreCullingPage(
-            SodiumOptionsGUI optionsGUI, OptionPage page, ConfigCategory.Builder builder) {
+    public static void extendMoreCullingPage(OptionPage page, ConfigCategory.Builder builder) {
         if (page.getName().getString().equals("MoreCulling")) {
             builder.option(dev.isxander.yacl3.api.ButtonOption.createBuilder()
                     .name(Text.translatable("moreculling.config.resetCache"))

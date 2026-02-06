@@ -6,7 +6,7 @@ import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import me.flashyreese.mods.sodiumextra.client.gui.options.control.SliderControlExtended;
 
 public class SodiumExtraCompat {
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"unchecked"})
     public static <T> boolean convertControl(
             dev.isxander.yacl3.api.Option.Builder<T> yaclOption,
             net.caffeinemc.mods.sodium.client.gui.options.Option<T> sodiumOption) {
