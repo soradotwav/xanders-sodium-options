@@ -107,7 +107,7 @@ public class XandersSodiumOptions {
         } catch (Exception e) {
             var exception = new IllegalStateException("Failed to convert Sodium option screen to YACL with XSO!", e);
 
-            if (XsoConfig.INSTANCE.getConfig().hardCrash) {
+            if (XsoConfig.INSTANCE.instance().hardCrash) {
                 throw exception;
             } else {
                 exception.printStackTrace();
@@ -193,7 +193,7 @@ public class XandersSodiumOptions {
                 MoreCullingCompat.addAvailableCheck(built, sodiumOption);
             return built;
         } catch (Exception e) {
-            if (XsoConfig.INSTANCE.getConfig().lenientOptions) {
+            if (XsoConfig.INSTANCE.instance().lenientOptions) {
                 System.out.println("Failed: " + sodiumOption.getName().getString());
                 e.printStackTrace();
                 return ButtonOption.createBuilder()
@@ -291,6 +291,6 @@ public class XandersSodiumOptions {
     }
 
     public static boolean shouldConvertGui() {
-        return XsoConfig.INSTANCE.getConfig().enabled && !errorOccured;
+        return XsoConfig.INSTANCE.instance().enabled && !errorOccured;
     }
 }
