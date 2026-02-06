@@ -4,6 +4,9 @@
 
 > Originally created by [isXander](https://github.com/isXander). This version supports Minecraft 1.21.6+. Looking for older versions? Check the [original mod page](https://modrinth.com/mod/xanders-sodium-options).
 
+> [!IMPORTANT]
+> **This branch (`1.21.6-1.21.10`) is no longer being updated.** Due to significant infrastructure changes in Sodium 0.8, future development will continue on the versions supporting the latest iteration of Sodium. Please check the [main repository](https://github.com/soradotwav/xanders-sodium-options) for the latest supported version.
+
 It has a wide range of support for various mods which integrate with Sodium, such as:
 -   [Iris](https://modrinth.com/mod/iris)
 -   [Sodium Extra](https://modrinth.com/mod/sodium-extra)
