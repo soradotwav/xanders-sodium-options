@@ -103,8 +103,4 @@ public class IrisCompat {
                 .option(shaderPackList)
                 .build();
     }
-
-    public static boolean isIrisSettingsPage(Text pageName) {
-        return pageName.getString().equals("Settings");
-    }
 }

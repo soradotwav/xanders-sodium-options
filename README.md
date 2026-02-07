@@ -14,9 +14,9 @@ It has a wide range of support for various mods which integrate with Sodium, suc
 Any other mods which integrate with Sodium's GUI will *likely work* as well. If you encounter any issues, please [report them here](https://github.com/soradotwav/xanders-sodium-options/issues) and/or join the [Discord server](https://discord.gg/TKzfYvmcYh).
 
 ### Screenshots
-![General Tab](https://cdn.modrinth.com/data/fGB38jk4/images/c9e886d11cce5808d7d6c59652e6093cf632b4cc.png)
-![Iris Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/ff0186778b04fd4675b07baebcaef3b8f6fae8a7.png)
-![MoreCulling Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/e4ce6aa3267a782c2a66f0672ffd63f3c73e4e5f.png)
-![Sodium Extra Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/5ee7db90e26a574fdde75111c0b601e5f1ae2928.png)
+![General Tab](https://cdn.modrinth.com/data/fGB38jk4/images/f29afb5dd207d066256b251dd601585517193725.png)
+![Iris Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/679376b35af1788186da6dff4c2eb623788931c0.png)
+![MoreCulling Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/2d29c8ae016c8d1f4f8831658866ea4499617238.png)
+![Sodium Extra Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/838d0c2664e27fb8576c7bf8450977716f4e71be.png)
 
 Thank you to [Zakku0w0](https://ko-fi.com/zakku0w0/) for the Ko-fi icon art.

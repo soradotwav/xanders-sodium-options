@@ -1,7 +1,6 @@
 package dev.isxander.xso.mixins;
 
 import dev.isxander.xso.XandersSodiumOptions;
-import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,13 +14,9 @@ public class MinecraftClientMixin {
     private Screen modifyScreen(Screen screen) {
         if (XandersSodiumOptions.shouldConvertGui() && screen instanceof VideoSettingsScreen videoSettingsScreen) {
             var accessor = (VideoSettingsScreenAccessor) videoSettingsScreen;
-            var pages = net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.getModOptions().stream()
-                    .flatMap(mod -> mod.pages().stream())
-                    .filter(page -> page instanceof OptionPage)
-                    .map(page -> (OptionPage) page)
-                    .toList();
+            var modOptions = net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.getModOptions();
 
-            return XandersSodiumOptions.wrapSodiumScreen(videoSettingsScreen, pages, accessor.getPrevScreen());
+            return XandersSodiumOptions.wrapSodiumScreen(videoSettingsScreen, modOptions, accessor.getPrevScreen());
         }
 
         return screen;
