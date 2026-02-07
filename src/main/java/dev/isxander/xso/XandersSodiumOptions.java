@@ -171,11 +171,23 @@ public class XandersSodiumOptions {
                     }
                 }
             } else {
+                OptionGroup.Builder firstGroupBuilder = null;
+
                 for (OptionPage page : optionPages) {
                     OptionGroup.Builder groupBuilder =
                             OptionGroup.createBuilder().name(page.name()).collapsed(false);
 
+                    if (firstGroupBuilder == null) {
+                        firstGroupBuilder = groupBuilder;
+                    }
+
+                    boolean first = true;
                     for (var group : page.groups()) {
+                        if (!first) {
+                            groupBuilder.option(LabelOption.create(Text.empty()));
+                        }
+                        first = false;
+
                         for (var option : group.options()) {
                             var yaclOption = convertOption(option);
                             optionMap.put(yaclOption, option);
@@ -183,15 +195,17 @@ public class XandersSodiumOptions {
                         }
                     }
 
+                    if (Compat.MORE_CULLING
+                            && "moreculling".equals(mod.configId())
+                            && groupBuilder == firstGroupBuilder) {
+                        MoreCullingCompat.addResetCacheButton(groupBuilder);
+                    }
+
                     categoryBuilder.group(groupBuilder.build());
                 }
             }
 
             wireAvailabilityListeners(optionMap);
-
-            if (Compat.MORE_CULLING && "moreculling".equals(mod.configId())) {
-                MoreCullingCompat.extendMoreCullingCategory(categoryBuilder);
-            }
 
             return categoryBuilder.build();
         } catch (Exception e) {
@@ -341,7 +355,7 @@ public class XandersSodiumOptions {
         return flags;
     }
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static void wireAvailabilityListeners(
             Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option>
                     optionMap) {
