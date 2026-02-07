@@ -141,11 +141,7 @@ public class XandersSodiumOptions {
             };
         } catch (Exception e) {
             if (XsoConfig.INSTANCE.instance().lenientOptions) {
-                LOGGER.error(
-                        "Failed to convert Sodium option named '"
-                                + sodiumOption.getName().getString()
-                                + "' to YACL option.",
-                        e);
+                LOGGER.error("Failed to convert Sodium option named '{}' to YACL option.", sodiumOption.getName().getString(), e);
 
                 return ButtonOption.createBuilder()
                         .name(sodiumOption.getName())
@@ -300,7 +296,7 @@ public class XandersSodiumOptions {
                 var controllerYacl = controllerEntry.getKey();
                 var controllerSodium = controllerEntry.getValue();
 
-                ((dev.isxander.yacl3.api.Option) controllerYacl).addEventListener((opt, event) -> {
+                controllerYacl.addEventListener((opt, event) -> {
                     if (event == OptionEventListener.Event.STATE_CHANGE) {
                         if (opt.pendingValue() instanceof Boolean bool) {
                             dependentYacl.setAvailable(bool);
