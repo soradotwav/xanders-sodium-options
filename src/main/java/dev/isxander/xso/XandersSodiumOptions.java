@@ -5,6 +5,7 @@ import static net.caffeinemc.mods.sodium.api.config.option.OptionFlag.*;
 import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.xso.mixins.SodiumOptionAccessor;
+import dev.isxander.xso.utils.CategoryDescriptions;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
@@ -42,8 +43,9 @@ public class XandersSodiumOptions {
             YetAnotherConfigLib.Builder builder =
                     YetAnotherConfigLib.createBuilder().title(Text.translatable("options.videoTitle"));
 
-            List<ConfigCategory> categories = new ArrayList<>();
+            CategoryDescriptions.clearRegistrations();
 
+            List<ConfigCategory> categories = new ArrayList<>();
             List<ModOptions> thirdPartyMods = new ArrayList<>();
 
             for (ModOptions mod : modOptionsList) {
@@ -62,7 +64,9 @@ public class XandersSodiumOptions {
             }
 
             if (Compat.IRIS) {
-                categories.add(IrisCompat.createShaderPacksCategory());
+                var irisCategory = IrisCompat.createShaderPacksCategory();
+                CategoryDescriptions.registerCategoryModId(irisCategory.name().getString(), "iris");
+                categories.add(irisCategory);
             }
 
             for (ModOptions mod : thirdPartyMods) {
@@ -72,11 +76,14 @@ public class XandersSodiumOptions {
 
                 var category = convertModCategory(mod);
                 if (category != null) {
+                    CategoryDescriptions.registerCategoryModId(category.name().getString(), mod.configId());
                     categories.add(category);
                 }
             }
 
-            categories.add(XsoConfig.getConfigCategory());
+            var xsoCategory = XsoConfig.getConfigCategory();
+            CategoryDescriptions.registerCategoryModId(xsoCategory.name().getString(), "xanders-sodium-options");
+            categories.add(xsoCategory);
 
             for (ConfigCategory category : categories) {
                 builder.category(category);

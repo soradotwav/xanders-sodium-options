@@ -1,6 +1,19 @@
 {
   "xso.title": "Xander's Sodium Options",
 
+  "xso.category.general": "General video settings including render distance, simulation distance, brightness, GUI scale, fullscreen, and VSync.",
+  "xso.category.quality": "Configure rendering quality options such as graphics mode, clouds, weather, particles, biome blending, entity distance, and shadow rendering.",
+  "xso.category.performance": "Tune performance related options like chunk builder threads, CPU render-ahead limit, and other optimizations that affect frame rate.",
+  "xso.category.advanced": "Advanced options for memory management and CPU/GPU synchronization. These settings are primarily useful for debugging or fine-tuning frame pacing.",
+
+  "xso.category.sodium_extra": "Additional options provided by Sodium Extra, including animations, particles, detail toggles, and extra rendering controls not covered by Sodium itself.",
+  "xso.category.moreculling": "Options for More Culling, which improves performance by skipping the rendering of hidden block faces, item frames, and other objects that aren't visible to the player.",
+  "xso.category.iris": "Shader configuration for Iris, allowing you to enable, disable, and switch between installed shader packs.",
+  "xso.category.xso": "Settings for Xander's Sodium Options (XSO), the mod providing this configuration screen. You can toggle the YACL overlay, enable lenient option handling, or configure crash behavior.",
+  "xso.category.entity_view_distance": "Configure per-entity render distances, allowing you to control how far away different entity types are visible for better performance or visibility.",
+
+  "xso.category.fallback": "Hover over an option to see its description.",
+
   "xso.cfg.enabled": "XSO",
   "xso.cfg.enabled.tooltip": "Configures whether XSO should override Sodium's options. When disabled, you can configure this mod through mod menu.",
   "xso.cfg.lenient_opts": "Lenient Options",
