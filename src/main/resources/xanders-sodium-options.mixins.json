@@ -5,9 +5,9 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "MinecraftClientMixin",
+    "SodiumOptionAccessor",
     "VideoSettingsScreenAccessor",
     "YACLScreenMixin",
     "yacl.TextScaledButtonWidgetMixin"
-
   ]
 }

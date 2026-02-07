@@ -4,6 +4,7 @@ import static net.caffeinemc.mods.sodium.api.config.option.OptionFlag.*;
 
 import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
+import dev.isxander.xso.mixins.SodiumOptionAccessor;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
@@ -14,6 +15,7 @@ import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
 import net.caffeinemc.mods.sodium.client.config.structure.ExternalButtonOption;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
+import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.NoticeScreen;
@@ -22,6 +24,7 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,13 +101,20 @@ public class XandersSodiumOptions {
             ConfigCategory.Builder categoryBuilder =
                     ConfigCategory.createBuilder().name(page.name());
 
+            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap =
+                    new LinkedHashMap<>();
+
             for (var group : page.groups()) {
                 categoryBuilder.option(LabelOption.create(Text.empty()));
 
                 for (var option : group.options()) {
-                    categoryBuilder.option(convertOption(option));
+                    var yaclOption = convertOption(option);
+                    optionMap.put(yaclOption, option);
+                    categoryBuilder.option(yaclOption);
                 }
             }
+
+            wireAvailabilityListeners(optionMap);
 
             if (Compat.MORE_CULLING) MoreCullingCompat.extendMoreCullingPage(page, categoryBuilder);
 
@@ -258,6 +268,52 @@ public class XandersSodiumOptions {
         }
 
         return flags;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void wireAvailabilityListeners(
+            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option>
+                    optionMap) {
+        Map<
+                        Identifier,
+                        Map.Entry<
+                                dev.isxander.yacl3.api.Option<?>,
+                                net.caffeinemc.mods.sodium.client.config.structure.Option>>
+                byId = new HashMap<>();
+        for (var entry : optionMap.entrySet()) {
+            var id = ((SodiumOptionAccessor) entry.getValue()).getId();
+            if (id != null) {
+                byId.put(id, entry);
+            }
+        }
+
+        for (var entry : optionMap.entrySet()) {
+            var sodiumDependent = entry.getValue();
+            var dependencyIds = sodiumDependent.getEnabled().getDependencies();
+            if (dependencyIds == null || dependencyIds.isEmpty()) continue;
+
+            var dependentYacl = entry.getKey();
+            for (var depId : dependencyIds) {
+                var controllerEntry = byId.get(depId);
+                if (controllerEntry == null) continue;
+
+                var controllerYacl = controllerEntry.getKey();
+                var controllerSodium = controllerEntry.getValue();
+
+                ((dev.isxander.yacl3.api.Option) controllerYacl).addEventListener((opt, event) -> {
+                    if (event == OptionEventListener.Event.STATE_CHANGE) {
+                        if (opt.pendingValue() instanceof Boolean bool) {
+                            dependentYacl.setAvailable(bool);
+                        } else if (controllerSodium instanceof StatefulOption stateful) {
+                            var original = stateful.getValidatedValue();
+                            stateful.modifyValue(opt.pendingValue());
+                            dependentYacl.setAvailable(sodiumDependent.isEnabled());
+                            stateful.modifyValue(original);
+                        }
+                    }
+                });
+            }
+        }
     }
 
     public static boolean shouldConvertGui() {
