@@ -14,7 +14,9 @@ import net.caffeinemc.mods.sodium.client.config.structure.BooleanOption;
 import net.caffeinemc.mods.sodium.client.config.structure.EnumOption;
 import net.caffeinemc.mods.sodium.client.config.structure.ExternalButtonOption;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
+import net.caffeinemc.mods.sodium.client.config.structure.ModOptions;
 import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
+import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.minecraft.client.MinecraftClient;
@@ -32,25 +34,46 @@ import org.slf4j.LoggerFactory;
 public class XandersSodiumOptions {
     private static boolean errorOccurred = false;
     private static final Logger LOGGER = LoggerFactory.getLogger("xanders-sodium-options");
+    private static final String SODIUM_CONFIG_ID = "sodium";
 
     public static Screen wrapSodiumScreen(
-            VideoSettingsScreen videoSettingsScreen, List<OptionPage> pages, Screen prevScreen) {
+            VideoSettingsScreen videoSettingsScreen, List<ModOptions> modOptionsList, Screen prevScreen) {
         try {
             YetAnotherConfigLib.Builder builder =
                     YetAnotherConfigLib.createBuilder().title(Text.translatable("options.videoTitle"));
 
             List<ConfigCategory> categories = new ArrayList<>();
-            for (OptionPage page : pages) {
-                var category = convertCategory(page);
-                if (category != null) {
-                    categories.add(category);
+
+            List<ModOptions> thirdPartyMods = new ArrayList<>();
+
+            for (ModOptions mod : modOptionsList) {
+                if (SODIUM_CONFIG_ID.equals(mod.configId())) {
+                    for (Page page : mod.pages()) {
+                        if (page instanceof OptionPage optionPage) {
+                            var category = convertSodiumCategory(optionPage);
+                            if (category != null) {
+                                categories.add(category);
+                            }
+                        }
+                    }
+                } else {
+                    thirdPartyMods.add(mod);
                 }
             }
 
-            // Insert Iris Shader Packs right after core Sodium pages (position 4)
             if (Compat.IRIS) {
-                int insertPosition = Math.min(4, categories.size());
-                categories.add(insertPosition, IrisCompat.createShaderPacksCategory());
+                categories.add(IrisCompat.createShaderPacksCategory());
+            }
+
+            for (ModOptions mod : thirdPartyMods) {
+                if (Compat.IRIS && "iris".equals(mod.configId())) {
+                    continue;
+                }
+
+                var category = convertModCategory(mod);
+                if (category != null) {
+                    categories.add(category);
+                }
             }
 
             categories.add(XsoConfig.getConfigCategory());
@@ -88,16 +111,8 @@ public class XandersSodiumOptions {
     }
 
     @Nullable
-    private static ConfigCategory convertCategory(OptionPage page) {
+    private static ConfigCategory convertSodiumCategory(OptionPage page) {
         try {
-            if (Compat.IRIS && IrisCompat.isIrisSettingsPage(page.name())) {
-                return null;
-            }
-
-            if (page.name().contains(Text.literal("LambDynamicLights"))) {
-                return null;
-            }
-
             ConfigCategory.Builder categoryBuilder =
                     ConfigCategory.createBuilder().name(page.name());
 
@@ -116,8 +131,6 @@ public class XandersSodiumOptions {
 
             wireAvailabilityListeners(optionMap);
 
-            if (Compat.MORE_CULLING) MoreCullingCompat.extendMoreCullingPage(page, categoryBuilder);
-
             return categoryBuilder.build();
         } catch (Exception e) {
             throw new IllegalStateException(
@@ -125,6 +138,65 @@ public class XandersSodiumOptions {
                             + page.name().getString()
                             + "' to YACL config category.",
                     e);
+        }
+    }
+
+    @Nullable
+    private static ConfigCategory convertModCategory(ModOptions mod) {
+        try {
+            List<OptionPage> optionPages = mod.pages().stream()
+                    .filter(page -> page instanceof OptionPage)
+                    .map(page -> (OptionPage) page)
+                    .toList();
+
+            if (optionPages.isEmpty()) {
+                return null;
+            }
+
+            ConfigCategory.Builder categoryBuilder =
+                    ConfigCategory.createBuilder().name(Text.literal(mod.name()));
+
+            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap =
+                    new LinkedHashMap<>();
+
+            if (optionPages.size() == 1) {
+                OptionPage page = optionPages.getFirst();
+                for (var group : page.groups()) {
+                    categoryBuilder.option(LabelOption.create(Text.empty()));
+
+                    for (var option : group.options()) {
+                        var yaclOption = convertOption(option);
+                        optionMap.put(yaclOption, option);
+                        categoryBuilder.option(yaclOption);
+                    }
+                }
+            } else {
+                for (OptionPage page : optionPages) {
+                    OptionGroup.Builder groupBuilder =
+                            OptionGroup.createBuilder().name(page.name()).collapsed(false);
+
+                    for (var group : page.groups()) {
+                        for (var option : group.options()) {
+                            var yaclOption = convertOption(option);
+                            optionMap.put(yaclOption, option);
+                            groupBuilder.option(yaclOption);
+                        }
+                    }
+
+                    categoryBuilder.group(groupBuilder.build());
+                }
+            }
+
+            wireAvailabilityListeners(optionMap);
+
+            if (Compat.MORE_CULLING && "moreculling".equals(mod.configId())) {
+                MoreCullingCompat.extendMoreCullingCategory(categoryBuilder);
+            }
+
+            return categoryBuilder.build();
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Failed to convert mod '" + mod.name() + "' options to YACL config category.", e);
         }
     }
 
@@ -141,7 +213,10 @@ public class XandersSodiumOptions {
             };
         } catch (Exception e) {
             if (XsoConfig.INSTANCE.instance().lenientOptions) {
-                LOGGER.error("Failed to convert Sodium option named '{}' to YACL option.", sodiumOption.getName().getString(), e);
+                LOGGER.error(
+                        "Failed to convert Sodium option named '{}' to YACL option.",
+                        sodiumOption.getName().getString(),
+                        e);
 
                 return ButtonOption.createBuilder()
                         .name(sodiumOption.getName())
@@ -266,7 +341,7 @@ public class XandersSodiumOptions {
         return flags;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     private static void wireAvailabilityListeners(
             Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option>
                     optionMap) {
