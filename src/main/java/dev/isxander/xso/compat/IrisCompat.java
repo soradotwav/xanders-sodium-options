@@ -1,20 +1,51 @@
 package dev.isxander.xso.compat;
 
+import dev.isxander.xso.XandersSodiumOptions;
+import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.impl.controller.DropdownStringControllerBuilderImpl;
 import java.io.IOException;
+import net.caffeinemc.mods.sodium.client.config.ConfigManager;
+import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmLinkScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
 public class IrisCompat {
+    private static boolean dirty = false;
 
-    public static ConfigCategory createShaderPacksCategory() {
+    public static ConfigCategory createShaderPacksCategory(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
+        if (XsoConfig.INSTANCE.instance().externalMenus) {
+            return PlaceholderCategory.createBuilder()
+                    .name(Text.translatable("options.iris.shaderPackSelection.title"))
+                    .screen((client, screen) -> {
+                        try {
+                            return new ShaderPackScreen(new Screen(Text.empty()) {
+                                @Override
+                                protected void init() {
+                                    client.setScreen(XandersSodiumOptions.wrapSodiumScreen(
+                                            videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
+                                }
+                            });
+                        } catch (Exception e) {
+                            XandersSodiumOptions.LOGGER.error("Failed to open Iris settings screen", e);
+
+                            return new net.minecraft.client.gui.screen.NoticeScreen(
+                                    () -> client.setScreen(null),
+                                    Text.literal("Iris Integration Error"),
+                                    Text.literal("Xander's Sodium Options failed to open Iris settings screen.\n\n"
+                                            + e.getMessage()));
+                        }
+                    })
+                    .build();
+        }
+
         var shaderPackList = Option.<String>createBuilder()
                 .name(Text.translatable("options.iris.selectedShaderPack"))
                 .description(OptionDescription.of(Text.translatable("options.iris.selectedShaderPack.description")))
@@ -24,12 +55,7 @@ public class IrisCompat {
                         (val) -> {
                             if (val.isEmpty()) val = null;
                             Iris.getIrisConfig().setShaderPackName(val);
-                            try {
-                                Iris.getIrisConfig().save();
-                                Iris.reload();
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
+                            dirty = true;
                         })
                 .controller((opt) -> {
                     try {
@@ -48,12 +74,7 @@ public class IrisCompat {
                 .description(OptionDescription.of(Text.translatable("options.iris.enableShaders.description")))
                 .binding(true, () -> Iris.getIrisConfig().areShadersEnabled(), (val) -> {
                     Iris.getIrisConfig().setShadersEnabled(val);
-                    try {
-                        Iris.getIrisConfig().save();
-                        Iris.reload();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    dirty = true;
                 })
                 .addListener((option, event) -> {
                     if (event == OptionEventListener.Event.STATE_CHANGE) {
@@ -102,5 +123,17 @@ public class IrisCompat {
                 .option(enableShaders)
                 .option(shaderPackList)
                 .build();
+    }
+
+    public static void applyChanges() {
+        if (Compat.IRIS && dirty) {
+            try {
+                Iris.getIrisConfig().save();
+                Iris.reload();
+                dirty = false;
+            } catch (IOException e) {
+                XandersSodiumOptions.LOGGER.error("Failed to save Iris config", e);
+            }
+        }
     }
 }

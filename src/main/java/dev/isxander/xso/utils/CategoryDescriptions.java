@@ -21,8 +21,11 @@ public class CategoryDescriptions {
             "sodium-extra", "xso.category.sodium_extra",
             "moreculling", "xso.category.moreculling",
             "iris", "xso.category.iris",
+            "lambdynlights", "xso.category.lambdynlights",
             "xanders-sodium-options", "xso.category.xso",
             "entity-view-distance", "xso.category.entity_view_distance");
+
+    private static final java.util.Set<String> EXTERNAL_MENU_MODS = java.util.Set.of("iris", "lambdynlights");
 
     private static final Map<String, String> categoryModIds = new ConcurrentHashMap<>();
 
@@ -53,7 +56,17 @@ public class CategoryDescriptions {
     private static DescriptionWithName getDefaultForMod(Text categoryName, String modId) {
         String customKey = MOD_DESCRIPTIONS.get(modId);
         if (customKey != null) {
-            return DescriptionWithName.of(categoryName, OptionDescription.of(Text.translatable(customKey)));
+            net.minecraft.text.MutableText description = Text.translatable(customKey);
+
+            if (EXTERNAL_MENU_MODS.contains(modId)) {
+                description = description
+                        .append("\n\n")
+                        .append(Text.translatable("xso.hint.use_external_menu")
+                                .formatted(
+                                        net.minecraft.util.Formatting.DARK_GRAY, net.minecraft.util.Formatting.ITALIC));
+            }
+
+            return DescriptionWithName.of(categoryName, OptionDescription.of(description));
         }
 
         return FabricLoader.getInstance()

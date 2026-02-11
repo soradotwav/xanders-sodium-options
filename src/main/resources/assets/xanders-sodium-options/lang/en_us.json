@@ -11,6 +11,7 @@
   "xso.category.iris": "Shader configuration for Iris, allowing you to enable, disable, and switch between installed shader packs.",
   "xso.category.xso": "Settings for Xander's Sodium Options (XSO), the mod providing this configuration screen. You can toggle the YACL overlay, enable lenient option handling, or configure crash behavior.",
   "xso.category.entity_view_distance": "Configure per-entity render distances, allowing you to control how far away different entity types are visible for better performance or visibility.",
+  "xso.category.lambdynlights": "Access settings for LambDynamicLights, which provides real-time lighting for held and dropped items, as well as certain entities like creepers and glowing squids.",
 
   "xso.category.fallback": "Hover over an option to see its description.",
 
@@ -20,6 +21,10 @@
   "xso.cfg.lenient_opts.tooltip": "If XSO fails to convert an option, instead of failing to create the whole GUI, it adds a placeholder option in place of the broken option so you can continue to use XSO with an incompatible mod.",
   "xso.cfg.hard_crash": "Hard Crash",
   "xso.cfg.hard_crash.tooltip": "If XSO cannot convert the Sodium GUI for whatever reason, enabling this makes Minecraft crash completely, rather than displaying the warning and giving you the original Sodium GUI. This can be beneficial as it makes Minecraft generate a crash report whereas it only prints to latest.log with this option off.",
+  "xso.cfg.external_menus": "External Menus",
+  "xso.cfg.external_menus.tooltip": "When enabled, clicking on categories like Iris will open their original configuration screens instead of XSO's integrated view. Useful if you prefer the native interfaces or experience compatibility issues.",
+
+  "xso.hint.use_external_menu": "Tip: Enable 'External Menus' in XSO settings to use the original configuration screen.",
 
   "xso.donation.tooltip": "Support Sodium's Development",
   "xso.donation.confirm.title": "Support Sodium",

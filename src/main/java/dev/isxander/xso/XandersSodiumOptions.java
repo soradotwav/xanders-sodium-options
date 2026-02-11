@@ -34,8 +34,8 @@ import org.slf4j.LoggerFactory;
 
 public class XandersSodiumOptions {
     private static boolean errorOccurred = false;
-    private static final Logger LOGGER = LoggerFactory.getLogger("xanders-sodium-options");
     private static final String SODIUM_CONFIG_ID = "sodium";
+    public static final Logger LOGGER = LoggerFactory.getLogger("xanders-sodium-options");
 
     public static Screen wrapSodiumScreen(
             VideoSettingsScreen videoSettingsScreen, List<ModOptions> modOptionsList, Screen prevScreen) {
@@ -64,13 +64,23 @@ public class XandersSodiumOptions {
             }
 
             if (Compat.IRIS) {
-                var irisCategory = IrisCompat.createShaderPacksCategory();
+                var irisCategory = IrisCompat.createShaderPacksCategory(prevScreen, videoSettingsScreen);
                 CategoryDescriptions.registerCategoryModId(irisCategory.name().getString(), "iris");
                 categories.add(irisCategory);
             }
 
+            if (Compat.LAMBDYNAMICLIGHTS) {
+                var lambdCategory = LDLCompat.createLdcCategory(prevScreen, videoSettingsScreen);
+                CategoryDescriptions.registerCategoryModId(lambdCategory.name().getString(), "lambdynlights");
+                categories.add(lambdCategory);
+            }
+
             for (ModOptions mod : thirdPartyMods) {
                 if (Compat.IRIS && "iris".equals(mod.configId())) {
+                    continue;
+                }
+
+                if (Compat.LAMBDYNAMICLIGHTS && "lambdynlights".equals(mod.configId())) {
                     continue;
                 }
 
@@ -91,7 +101,9 @@ public class XandersSodiumOptions {
 
             builder.save(() -> {
                 net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.applyAllOptions();
-                XsoConfig.INSTANCE.save();
+                XsoConfig.applyChanges();
+                LDLCompat.applyChanges();
+                IrisCompat.applyChanges();
             });
             return builder.build().generateScreen(prevScreen);
         } catch (Exception e) {
