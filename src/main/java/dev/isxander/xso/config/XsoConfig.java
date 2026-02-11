@@ -75,7 +75,7 @@ public class XsoConfig {
                         .build())
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.external_menus"))
-                        .description(OptionDescription.of(Text.translatable("xso.external_menus.tooltip")))
+                        .description(OptionDescription.of(Text.translatable("xso.cfg.external_menus.tooltip")))
                         .binding(defaults.externalMenus, () -> config.externalMenus, val -> {
                             config.externalMenus = val;
                             dirty = true;

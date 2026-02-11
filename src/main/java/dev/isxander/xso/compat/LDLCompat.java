@@ -265,7 +265,7 @@ public class LDLCompat {
         return Option.<Boolean>createBuilder()
                 .name(Text.translatable("lambdynlights.option." + entry.key()))
                 .description(OptionDescription.of(Text.translatable(tooltipKey)))
-                .binding(((SettingEntryAccessor<Boolean>) (Object) entry).getDefaultValue(), entry::get, val -> {
+                .binding(((SettingEntryAccessor<Boolean>) entry).getDefaultValue(), entry::get, val -> {
                     entry.set(val);
                     dirty = true;
                 })
