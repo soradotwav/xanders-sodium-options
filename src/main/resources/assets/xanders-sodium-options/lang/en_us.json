@@ -24,6 +24,8 @@
   "xso.cfg.external_menus": "External Menus",
   "xso.cfg.external_menus.tooltip": "When enabled, clicking on categories like Iris will open their original configuration screens instead of XSO's integrated view. Useful if you prefer the native interfaces or experience compatibility issues.",
 
+  "xso.hint.use_external_menu": "Tip: Enable 'External Menus' in XSO settings to use the original configuration screen.",
+
   "xso.donation.tooltip": "Support Sodium's Development",
   "xso.donation.confirm.title": "Support Sodium",
   "xso.donation.confirm.message": "Your support helps keep Sodium's development active. Would you like to visit their Ko-fi page?",
