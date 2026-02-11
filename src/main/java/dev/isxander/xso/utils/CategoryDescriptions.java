@@ -21,6 +21,7 @@ public class CategoryDescriptions {
             "sodium-extra", "xso.category.sodium_extra",
             "moreculling", "xso.category.moreculling",
             "iris", "xso.category.iris",
+            "lambdynlights", "xso.category.lambdynlights",
             "xanders-sodium-options", "xso.category.xso",
             "entity-view-distance", "xso.category.entity_view_distance");
 

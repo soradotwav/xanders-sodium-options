@@ -11,6 +11,7 @@
   "xso.category.iris": "Shader configuration for Iris, allowing you to enable, disable, and switch between installed shader packs.",
   "xso.category.xso": "Settings for Xander's Sodium Options (XSO), the mod providing this configuration screen. You can toggle the YACL overlay, enable lenient option handling, or configure crash behavior.",
   "xso.category.entity_view_distance": "Configure per-entity render distances, allowing you to control how far away different entity types are visible for better performance or visibility.",
+  "xso.category.lambdynlights": "Access settings for LambDynamicLights, which provides real-time lighting for held and dropped items, as well as certain entities like creepers and glowing squids.",
 
   "xso.category.fallback": "Hover over an option to see its description.",
 
