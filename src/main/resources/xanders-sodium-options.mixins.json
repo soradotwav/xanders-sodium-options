@@ -12,6 +12,7 @@
     "SettingEntryAccessor",
     "yacl.CategoryTabMixin",
     "yacl.OptionListWidgetMixin",
-    "yacl.TextScaledButtonWidgetMixin"
+    "yacl.TextScaledButtonWidgetMixin",
+    "TabManagerMixin"
   ]
 }
