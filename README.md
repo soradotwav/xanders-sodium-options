@@ -15,7 +15,7 @@ Any other mods which integrate with Sodium's GUI will *likely work* as well. If 
 
 ### Screenshots
 ![General Tab](https://cdn.modrinth.com/data/fGB38jk4/images/f29afb5dd207d066256b251dd601585517193725.png)
-![Iris Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/679376b35af1788186da6dff4c2eb623788931c0.png)
+![Iris Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/72e52cee7a83988b107ad4dc6bcc4c3cdff67b39.png)
 ![MoreCulling Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/2d29c8ae016c8d1f4f8831658866ea4499617238.png)
 ![Sodium Extra Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/838d0c2664e27fb8576c7bf8450977716f4e71be.png)
 
