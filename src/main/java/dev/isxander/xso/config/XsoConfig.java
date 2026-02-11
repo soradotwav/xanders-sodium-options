@@ -30,6 +30,9 @@ public class XsoConfig {
     @SerialEntry
     public boolean hardCrash = false;
 
+    @SerialEntry
+    public boolean externalMenus = false;
+
     public static ConfigCategory getConfigCategory() {
         XsoConfig config = INSTANCE.instance();
         XsoConfig defaults = INSTANCE.defaults();
@@ -58,6 +61,14 @@ public class XsoConfig {
                         .name(Text.translatable("xso.cfg.hard_crash"))
                         .description(OptionDescription.of(Text.translatable("xso.cfg.hard_crash.tooltip")))
                         .binding(defaults.hardCrash, () -> config.hardCrash, val -> config.hardCrash = val)
+                        .controller(opt -> BooleanControllerBuilder.create(opt)
+                                .yesNoFormatter()
+                                .coloured(false))
+                        .build())
+                .option(Option.<Boolean>createBuilder()
+                        .name(Text.translatable("xso.cfg.external_menus"))
+                        .description(OptionDescription.of(Text.translatable("xso.external_menus.tooltip")))
+                        .binding(defaults.externalMenus, () -> config.externalMenus, val -> config.externalMenus = val)
                         .controller(opt -> BooleanControllerBuilder.create(opt)
                                 .yesNoFormatter()
                                 .coloured(false))

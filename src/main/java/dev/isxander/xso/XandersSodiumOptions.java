@@ -64,7 +64,7 @@ public class XandersSodiumOptions {
             }
 
             if (Compat.IRIS) {
-                var irisCategory = IrisCompat.createShaderPacksCategory();
+                var irisCategory = IrisCompat.createShaderPacksCategory(prevScreen, videoSettingsScreen);
                 CategoryDescriptions.registerCategoryModId(irisCategory.name().getString(), "iris");
                 categories.add(irisCategory);
             }
