@@ -62,8 +62,8 @@ public class CategoryDescriptions {
                 description = description
                         .append("\n\n")
                         .append(Text.translatable("xso.hint.use_external_menu")
-                                .formatted(net.minecraft.util.Formatting.DARK_GRAY,
-                                        net.minecraft.util.Formatting.ITALIC));
+                                .formatted(
+                                        net.minecraft.util.Formatting.DARK_GRAY, net.minecraft.util.Formatting.ITALIC));
             }
 
             return DescriptionWithName.of(categoryName, OptionDescription.of(description));
@@ -84,14 +84,12 @@ public class CategoryDescriptions {
     }
 
     public static boolean isLabelOptionSpacer(DescriptionWithName desc) {
-        if (desc == null)
-            return false;
+        if (desc == null) return false;
         return LABEL_OPTION_NAME.equals(desc.name().getString());
     }
 
     public static boolean hasEmptyDescription(DescriptionWithName desc) {
-        if (desc == null)
-            return false;
+        if (desc == null) return false;
         return desc.description().text().getString().isBlank();
     }
 }

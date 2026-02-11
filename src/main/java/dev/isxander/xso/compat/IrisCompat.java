@@ -53,8 +53,7 @@ public class IrisCompat {
                         Iris.getIrisConfig().getShaderPackName().orElse(""),
                         () -> Iris.getIrisConfig().getShaderPackName().orElse(""),
                         (val) -> {
-                            if (val.isEmpty())
-                                val = null;
+                            if (val.isEmpty()) val = null;
                             Iris.getIrisConfig().setShaderPackName(val);
                             dirty = true;
                         })
@@ -82,7 +81,8 @@ public class IrisCompat {
                         shaderPackList.setAvailable(option.pendingValue());
                     }
                 })
-                .controller((opt) -> BooleanControllerBuilder.create(opt).coloured(true).trueFalseFormatter())
+                .controller((opt) ->
+                        BooleanControllerBuilder.create(opt).coloured(true).trueFalseFormatter())
                 .build();
 
         return ConfigCategory.createBuilder()
