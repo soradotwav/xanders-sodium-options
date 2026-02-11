@@ -18,6 +18,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
 public class IrisCompat {
+    private static boolean dirty = false;
 
     public static ConfigCategory createShaderPacksCategory(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
         if (XsoConfig.INSTANCE.instance().externalMenus) {
@@ -54,12 +55,7 @@ public class IrisCompat {
                         (val) -> {
                             if (val.isEmpty()) val = null;
                             Iris.getIrisConfig().setShaderPackName(val);
-                            try {
-                                Iris.getIrisConfig().save();
-                                Iris.reload();
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
+                            dirty = true;
                         })
                 .controller((opt) -> {
                     try {
@@ -78,12 +74,7 @@ public class IrisCompat {
                 .description(OptionDescription.of(Text.translatable("options.iris.enableShaders.description")))
                 .binding(true, () -> Iris.getIrisConfig().areShadersEnabled(), (val) -> {
                     Iris.getIrisConfig().setShadersEnabled(val);
-                    try {
-                        Iris.getIrisConfig().save();
-                        Iris.reload();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    dirty = true;
                 })
                 .addListener((option, event) -> {
                     if (event == OptionEventListener.Event.STATE_CHANGE) {
@@ -132,5 +123,17 @@ public class IrisCompat {
                 .option(enableShaders)
                 .option(shaderPackList)
                 .build();
+    }
+
+    public static void applyChanges() {
+        if (Compat.IRIS && dirty) {
+            try {
+                Iris.getIrisConfig().save();
+                Iris.reload();
+                dirty = false;
+            } catch (IOException e) {
+                XandersSodiumOptions.LOGGER.error("Failed to save Iris config", e);
+            }
+        }
     }
 }

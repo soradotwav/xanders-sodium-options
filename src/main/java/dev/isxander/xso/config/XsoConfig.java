@@ -13,6 +13,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class XsoConfig {
+    private static boolean dirty = false;
+
     public static final ConfigClassHandler<XsoConfig> INSTANCE = ConfigClassHandler.createBuilder(XsoConfig.class)
             .id(Identifier.of("xso", "config"))
             .serializer(handler -> GsonConfigSerializerBuilder.create(handler)
@@ -43,16 +45,19 @@ public class XsoConfig {
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.enabled"))
                         .description(OptionDescription.of(Text.translatable("xso.cfg.enabled.tooltip")))
-                        .binding(defaults.enabled, () -> config.enabled, val -> config.enabled = val)
+                        .binding(defaults.enabled, () -> config.enabled, val -> {
+                            config.enabled = val;
+                            dirty = true;
+                        })
                         .controller(BooleanControllerBuilder::create)
                         .build())
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.lenient_opts"))
                         .description(OptionDescription.of(Text.translatable("xso.cfg.lenient_opts.tooltip")))
-                        .binding(
-                                defaults.lenientOptions,
-                                () -> config.lenientOptions,
-                                val -> config.lenientOptions = val)
+                        .binding(defaults.lenientOptions, () -> config.lenientOptions, val -> {
+                            config.lenientOptions = val;
+                            dirty = true;
+                        })
                         .controller(opt -> BooleanControllerBuilder.create(opt)
                                 .yesNoFormatter()
                                 .coloured(false))
@@ -60,7 +65,10 @@ public class XsoConfig {
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.hard_crash"))
                         .description(OptionDescription.of(Text.translatable("xso.cfg.hard_crash.tooltip")))
-                        .binding(defaults.hardCrash, () -> config.hardCrash, val -> config.hardCrash = val)
+                        .binding(defaults.hardCrash, () -> config.hardCrash, val -> {
+                            config.hardCrash = val;
+                            dirty = true;
+                        })
                         .controller(opt -> BooleanControllerBuilder.create(opt)
                                 .yesNoFormatter()
                                 .coloured(false))
@@ -68,7 +76,10 @@ public class XsoConfig {
                 .option(Option.<Boolean>createBuilder()
                         .name(Text.translatable("xso.cfg.external_menus"))
                         .description(OptionDescription.of(Text.translatable("xso.external_menus.tooltip")))
-                        .binding(defaults.externalMenus, () -> config.externalMenus, val -> config.externalMenus = val)
+                        .binding(defaults.externalMenus, () -> config.externalMenus, val -> {
+                            config.externalMenus = val;
+                            dirty = true;
+                        })
                         .controller(opt -> BooleanControllerBuilder.create(opt)
                                 .yesNoFormatter()
                                 .coloured(false))
@@ -78,5 +89,12 @@ public class XsoConfig {
 
     public static void load() {
         INSTANCE.load();
+    }
+
+    public static void applyChanges() {
+        if (dirty) {
+            INSTANCE.save();
+            dirty = false;
+        }
     }
 }

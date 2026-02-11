@@ -27,11 +27,7 @@ import net.minecraft.util.Formatting;
 
 @SuppressWarnings({"UnstableApiUsage"})
 public class LDLCompat {
-    public static void save() {
-        if (Compat.LAMBDYNAMICLIGHTS) {
-            LambDynLights.get().config.save();
-        }
-    }
+    private static boolean dirty = false;
 
     public static ConfigCategory createLdcCategory(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
         if (XsoConfig.INSTANCE.instance().externalMenus) {
@@ -74,7 +70,10 @@ public class LDLCompat {
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultDynamicLightsMode(),
                         config::getDynamicLightsMode,
-                        config::setDynamicLightsMode)
+                        mode -> {
+                            config.setDynamicLightsMode(mode);
+                            dirty = true;
+                        })
                 .controller(opt -> EnumControllerBuilder.create(opt)
                         .enumClass(DynamicLightsMode.class)
                         .formatValue(DynamicLightsMode::getTranslatedText))
@@ -101,16 +100,23 @@ public class LDLCompat {
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultChunkRebuildSchedulerMode(),
                         config::getChunkRebuildSchedulerMode,
-                        config::setChunkRebuildSchedulerMode)
+                        mode -> {
+                            config.setChunkRebuildSchedulerMode(mode);
+                            dirty = true;
+                        })
                 .controller(opt -> EnumControllerBuilder.create(opt)
                         .enumClass(ChunkRebuildSchedulerMode.class)
                         .formatValue(ChunkRebuildSchedulerMode::getTranslatedText))
                 .build());
 
-        performanceGroup.option(createAdaptiveTickingOption(
-                "slow", config::getSlowTickingDistance, (val) -> config.slowTickingOption.set((double) val)));
-        performanceGroup.option(createAdaptiveTickingOption(
-                "slower", config::getSlowerTickingDistance, (val) -> config.slowerTickingOption.set((double) val)));
+        performanceGroup.option(createAdaptiveTickingOption("slow", config::getSlowTickingDistance, (val) -> {
+            config.slowTickingOption.set((double) val);
+            dirty = true;
+        }));
+        performanceGroup.option(createAdaptiveTickingOption("slower", config::getSlowerTickingDistance, (val) -> {
+            config.slowerTickingOption.set((double) val);
+            dirty = true;
+        }));
         performanceGroup.option(createBooleanOption(
                 config.getBackgroundAdaptiveTicking(),
                 "lambdynlights.option.adaptive_ticking.background_sleep.tooltip"));
@@ -128,7 +134,10 @@ public class LDLCompat {
                 var binding = ((SettingEntryAccessor<Boolean>) (Object) setting).getDefaultValue();
                 entitiesGroup.option(Option.<Boolean>createBuilder()
                         .name(holder.lambdynlights$getName())
-                        .binding(binding, setting::get, setting::set)
+                        .binding(binding, setting::get, val -> {
+                            setting.set(val);
+                            dirty = true;
+                        })
                         .controller(TickBoxControllerBuilder::create)
                         .build());
             }
@@ -150,7 +159,10 @@ public class LDLCompat {
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultCreeperLightingMode(),
                         config::getCreeperLightingMode,
-                        config::setCreeperLightingMode)
+                        mode -> {
+                            config.setCreeperLightingMode(mode);
+                            dirty = true;
+                        })
                 .controller(opt -> EnumControllerBuilder.create(opt)
                         .enumClass(ExplosiveLightingMode.class)
                         .formatValue(ExplosiveLightingMode::getTranslatedText))
@@ -163,10 +175,10 @@ public class LDLCompat {
                         ExplosiveLightingMode.OFF.getTranslatedText(),
                         ExplosiveLightingMode.SIMPLE.getTranslatedText(),
                         ExplosiveLightingMode.FANCY.getTranslatedText())))
-                .binding(
-                        DynamicLightsConfigAccessor.getDefaultTntLightingMode(),
-                        config::getTntLightingMode,
-                        config::setTntLightingMode)
+                .binding(DynamicLightsConfigAccessor.getDefaultTntLightingMode(), config::getTntLightingMode, mode -> {
+                    config.setTntLightingMode(mode);
+                    dirty = true;
+                })
                 .controller(opt -> EnumControllerBuilder.create(opt)
                         .enumClass(ExplosiveLightingMode.class)
                         .formatValue(ExplosiveLightingMode::getTranslatedText))
@@ -199,7 +211,10 @@ public class LDLCompat {
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultDebugCellDisplayRadius(),
                         config::getDebugCellDisplayRadius,
-                        config::setDebugCellDisplayRadius)
+                        val -> {
+                            config.setDebugCellDisplayRadius(val);
+                            dirty = true;
+                        })
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(0, 10)
                         .step(1)
@@ -217,7 +232,10 @@ public class LDLCompat {
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultDebugLightLevelRadius(),
                         config::getDebugLightLevelRadius,
-                        config::setDebugLightLevelRadius)
+                        val -> {
+                            config.setDebugLightLevelRadius(val);
+                            dirty = true;
+                        })
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(0, 10)
                         .step(1)
@@ -235,12 +253,22 @@ public class LDLCompat {
         return builder.build();
     }
 
+    public static void applyChanges() {
+        if (Compat.LAMBDYNAMICLIGHTS && dirty) {
+            LambDynLights.get().config.save();
+            dirty = false;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private static Option<Boolean> createBooleanOption(SettingEntry<Boolean> entry, String tooltipKey) {
         return Option.<Boolean>createBuilder()
                 .name(Text.translatable("lambdynlights.option." + entry.key()))
                 .description(OptionDescription.of(Text.translatable(tooltipKey)))
-                .binding(((SettingEntryAccessor<Boolean>) (Object) entry).getDefaultValue(), entry::get, entry::set)
+                .binding(((SettingEntryAccessor<Boolean>) (Object) entry).getDefaultValue(), entry::get, val -> {
+                    entry.set(val);
+                    dirty = true;
+                })
                 .controller(TickBoxControllerBuilder::create)
                 .build();
     }
