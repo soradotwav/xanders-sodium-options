@@ -40,8 +40,8 @@ public class XandersSodiumOptions {
     public static Screen wrapSodiumScreen(
             VideoSettingsScreen videoSettingsScreen, List<ModOptions> modOptionsList, Screen prevScreen) {
         try {
-            YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder()
-                    .title(Text.translatable("options.videoTitle"));
+            YetAnotherConfigLib.Builder builder =
+                    YetAnotherConfigLib.createBuilder().title(Text.translatable("options.videoTitle"));
 
             CategoryDescriptions.clearRegistrations();
 
@@ -102,6 +102,7 @@ public class XandersSodiumOptions {
             builder.save(() -> {
                 net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.applyAllOptions();
                 XsoConfig.INSTANCE.save();
+                LDLCompat.save();
             });
             return builder.build().generateScreen(prevScreen);
         } catch (Exception e) {
@@ -130,9 +131,11 @@ public class XandersSodiumOptions {
     @Nullable
     private static ConfigCategory convertSodiumCategory(OptionPage page) {
         try {
-            ConfigCategory.Builder categoryBuilder = ConfigCategory.createBuilder().name(page.name());
+            ConfigCategory.Builder categoryBuilder =
+                    ConfigCategory.createBuilder().name(page.name());
 
-            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap = new LinkedHashMap<>();
+            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap =
+                    new LinkedHashMap<>();
 
             for (var group : page.groups()) {
                 categoryBuilder.option(LabelOption.create(Text.empty()));
@@ -168,9 +171,11 @@ public class XandersSodiumOptions {
                 return null;
             }
 
-            ConfigCategory.Builder categoryBuilder = ConfigCategory.createBuilder().name(Text.literal(mod.name()));
+            ConfigCategory.Builder categoryBuilder =
+                    ConfigCategory.createBuilder().name(Text.literal(mod.name()));
 
-            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap = new LinkedHashMap<>();
+            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap =
+                    new LinkedHashMap<>();
 
             if (optionPages.size() == 1) {
                 OptionPage page = optionPages.getFirst();
@@ -187,7 +192,8 @@ public class XandersSodiumOptions {
                 OptionGroup.Builder firstGroupBuilder = null;
 
                 for (OptionPage page : optionPages) {
-                    OptionGroup.Builder groupBuilder = OptionGroup.createBuilder().name(page.name()).collapsed(false);
+                    OptionGroup.Builder groupBuilder =
+                            OptionGroup.createBuilder().name(page.name()).collapsed(false);
 
                     if (firstGroupBuilder == null) {
                         firstGroupBuilder = groupBuilder;
@@ -251,8 +257,7 @@ public class XandersSodiumOptions {
                                 Text.translatable("xso.incompatible.tooltip").formatted(Formatting.RED)))
                         .available(false)
                         .text(Text.translatable("xso.incompatible.button").formatted(Formatting.RED))
-                        .action((screen, opt) -> {
-                        })
+                        .action((screen, opt) -> {})
                         .build();
             } else {
                 throw new IllegalStateException(
@@ -270,8 +275,8 @@ public class XandersSodiumOptions {
         if (option.getImpact() != null) {
             descText = descText.append("\n")
                     .append(Text.translatable(
-                            "sodium.options.performance_impact_string",
-                            option.getImpact().getName())
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -291,8 +296,8 @@ public class XandersSodiumOptions {
         if (option.getImpact() != null) {
             descText = descText.append("\n")
                     .append(Text.translatable(
-                            "sodium.options.performance_impact_string",
-                            option.getImpact().getName())
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -311,15 +316,15 @@ public class XandersSodiumOptions {
                 .build();
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static <E extends Enum<E>> Option<E> convertEnumOption(EnumOption<E> option) {
         MutableText descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
                     .append(Text.translatable(
-                            "sodium.options.performance_impact_string",
-                            option.getImpact().getName())
+                                    "sodium.options.performance_impact_string",
+                                    option.getImpact().getName())
                             .formatted(Formatting.GRAY));
         }
 
@@ -368,10 +373,16 @@ public class XandersSodiumOptions {
         return flags;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static void wireAvailabilityListeners(
-            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap) {
-        Map<Identifier, Map.Entry<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option>> byId = new HashMap<>();
+            Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option>
+                    optionMap) {
+        Map<
+                        Identifier,
+                        Map.Entry<
+                                dev.isxander.yacl3.api.Option<?>,
+                                net.caffeinemc.mods.sodium.client.config.structure.Option>>
+                byId = new HashMap<>();
         for (var entry : optionMap.entrySet()) {
             var id = ((SodiumOptionAccessor) entry.getValue()).getId();
             if (id != null) {
@@ -382,14 +393,12 @@ public class XandersSodiumOptions {
         for (var entry : optionMap.entrySet()) {
             var sodiumDependent = entry.getValue();
             var dependencyIds = sodiumDependent.getEnabled().getDependencies();
-            if (dependencyIds == null || dependencyIds.isEmpty())
-                continue;
+            if (dependencyIds == null || dependencyIds.isEmpty()) continue;
 
             var dependentYacl = entry.getKey();
             for (var depId : dependencyIds) {
                 var controllerEntry = byId.get(depId);
-                if (controllerEntry == null)
-                    continue;
+                if (controllerEntry == null) continue;
 
                 var controllerYacl = controllerEntry.getKey();
                 var controllerSodium = controllerEntry.getValue();

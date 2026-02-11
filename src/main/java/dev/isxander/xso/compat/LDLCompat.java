@@ -2,6 +2,8 @@ package dev.isxander.xso.compat;
 
 import dev.isxander.xso.XandersSodiumOptions;
 import dev.isxander.xso.config.XsoConfig;
+import dev.isxander.xso.mixins.DynamicLightsConfigAccessor;
+import dev.isxander.xso.mixins.SettingEntryAccessor;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
@@ -14,6 +16,8 @@ import dev.lambdaurora.lambdynlights.LambDynLights;
 import dev.lambdaurora.lambdynlights.accessor.DynamicLightHandlerHolder;
 import dev.lambdaurora.lambdynlights.config.SettingEntry;
 import dev.lambdaurora.lambdynlights.gui.SettingsScreen;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -21,11 +25,14 @@ import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+@SuppressWarnings({"UnstableApiUsage"})
 public class LDLCompat {
-    @SuppressWarnings({"UnstableApiUsage"})
+    public static void save() {
+        if (Compat.LAMBDYNAMICLIGHTS) {
+            LambDynLights.get().config.save();
+        }
+    }
+
     public static ConfigCategory createLdcCategory(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
         if (XsoConfig.INSTANCE.instance().externalMenus) {
             return PlaceholderCategory.createBuilder()
@@ -56,8 +63,7 @@ public class LDLCompat {
 
         DynamicLightsConfig config = LambDynLights.get().config;
 
-        ConfigCategory.Builder builder = ConfigCategory.createBuilder()
-                .name(Text.translatable("lambdynlights"));
+        ConfigCategory.Builder builder = ConfigCategory.createBuilder().name(Text.translatable("lambdynlights"));
 
         OptionGroup.Builder generalGroup = OptionGroup.createBuilder()
                 .name(Text.translatable("lambdynlights.menu.tabs.general"))
@@ -65,16 +71,20 @@ public class LDLCompat {
 
         generalGroup.option(Option.<DynamicLightsMode>createBuilder()
                 .name(Text.translatable("lambdynlights.option.mode"))
-                .binding(config.getDynamicLightsMode(), config::getDynamicLightsMode, config::setDynamicLightsMode)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(DynamicLightsMode.class)
+                .binding(
+                        DynamicLightsConfigAccessor.getDefaultDynamicLightsMode(),
+                        config::getDynamicLightsMode,
+                        config::setDynamicLightsMode)
+                .controller(opt -> EnumControllerBuilder.create(opt)
+                        .enumClass(DynamicLightsMode.class)
                         .formatValue(DynamicLightsMode::getTranslatedText))
                 .build());
 
         generalGroup.option(createBooleanOption(config.getEntitiesLightSource(), "lambdynlights.tooltip.entities"));
-        generalGroup
-                .option(createBooleanOption(config.getSelfLightSource(), "lambdynlights.tooltip.self_light_source"));
-        generalGroup
-                .option(createBooleanOption(config.getWaterSensitiveCheck(), "lambdynlights.tooltip.water_sensitive"));
+        generalGroup.option(
+                createBooleanOption(config.getSelfLightSource(), "lambdynlights.tooltip.self_light_source"));
+        generalGroup.option(
+                createBooleanOption(config.getWaterSensitiveCheck(), "lambdynlights.tooltip.water_sensitive"));
 
         builder.group(generalGroup.build());
 
@@ -84,21 +94,25 @@ public class LDLCompat {
 
         performanceGroup.option(Option.<ChunkRebuildSchedulerMode>createBuilder()
                 .name(Text.translatable("lambdynlights.option.chunk_rebuild_scheduler"))
-                .description(
-                        OptionDescription.of(Text.translatable("lambdynlights.option.chunk_rebuild_scheduler.tooltip",
-                                ChunkRebuildSchedulerMode.CULLING.getTranslatedText(),
-                                ChunkRebuildSchedulerMode.IMMEDIATE.getTranslatedText())))
-                .binding(config.getChunkRebuildSchedulerMode(), config::getChunkRebuildSchedulerMode,
+                .description(OptionDescription.of(Text.translatable(
+                        "lambdynlights.option.chunk_rebuild_scheduler.tooltip",
+                        ChunkRebuildSchedulerMode.CULLING.getTranslatedText(),
+                        ChunkRebuildSchedulerMode.IMMEDIATE.getTranslatedText())))
+                .binding(
+                        DynamicLightsConfigAccessor.getDefaultChunkRebuildSchedulerMode(),
+                        config::getChunkRebuildSchedulerMode,
                         config::setChunkRebuildSchedulerMode)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(ChunkRebuildSchedulerMode.class)
+                .controller(opt -> EnumControllerBuilder.create(opt)
+                        .enumClass(ChunkRebuildSchedulerMode.class)
                         .formatValue(ChunkRebuildSchedulerMode::getTranslatedText))
                 .build());
 
-        performanceGroup.option(createAdaptiveTickingOption("slow", config::getSlowTickingDistance,
-                (val) -> config.slowTickingOption.set((double) val)));
-        performanceGroup.option(createAdaptiveTickingOption("slower", config::getSlowerTickingDistance,
-                (val) -> config.slowerTickingOption.set((double) val)));
-        performanceGroup.option(createBooleanOption(config.getBackgroundAdaptiveTicking(),
+        performanceGroup.option(createAdaptiveTickingOption(
+                "slow", config::getSlowTickingDistance, (val) -> config.slowTickingOption.set((double) val)));
+        performanceGroup.option(createAdaptiveTickingOption(
+                "slower", config::getSlowerTickingDistance, (val) -> config.slowerTickingOption.set((double) val)));
+        performanceGroup.option(createBooleanOption(
+                config.getBackgroundAdaptiveTicking(),
                 "lambdynlights.option.adaptive_ticking.background_sleep.tooltip"));
 
         builder.group(performanceGroup.build());
@@ -107,18 +121,18 @@ public class LDLCompat {
                 .name(Text.translatable("lambdynlights.menu.light_sources"))
                 .collapsed(true);
 
-        Registries.ENTITY_TYPE.stream()
-                .map(DynamicLightHandlerHolder::cast)
-                .forEach(holder -> {
-                    var setting = holder.lambdynlights$getSetting();
-                    if (setting != null) {
-                        entitiesGroup.option(Option.<Boolean>createBuilder()
-                                .name(holder.lambdynlights$getName())
-                                .binding(setting.get(), setting::get, setting::set)
-                                .controller(TickBoxControllerBuilder::create)
-                                .build());
-                    }
-                });
+        Registries.ENTITY_TYPE.stream().map(DynamicLightHandlerHolder::cast).forEach(holder -> {
+            var setting = holder.lambdynlights$getSetting();
+            if (setting != null) {
+                @SuppressWarnings("unchecked")
+                var binding = ((SettingEntryAccessor<Boolean>) (Object) setting).getDefaultValue();
+                entitiesGroup.option(Option.<Boolean>createBuilder()
+                        .name(holder.lambdynlights$getName())
+                        .binding(binding, setting::get, setting::set)
+                        .controller(TickBoxControllerBuilder::create)
+                        .build());
+            }
+        });
 
         builder.group(entitiesGroup.build());
 
@@ -128,24 +142,33 @@ public class LDLCompat {
 
         specialGroup.option(Option.<ExplosiveLightingMode>createBuilder()
                 .name(Text.translatable("entity.minecraft.creeper"))
-                .description(OptionDescription.of(Text.translatable("lambdynlights.tooltip.creeper_lighting",
+                .description(OptionDescription.of(Text.translatable(
+                        "lambdynlights.tooltip.creeper_lighting",
                         ExplosiveLightingMode.OFF.getTranslatedText(),
                         ExplosiveLightingMode.SIMPLE.getTranslatedText(),
                         ExplosiveLightingMode.FANCY.getTranslatedText())))
-                .binding(config.getCreeperLightingMode(), config::getCreeperLightingMode,
+                .binding(
+                        DynamicLightsConfigAccessor.getDefaultCreeperLightingMode(),
+                        config::getCreeperLightingMode,
                         config::setCreeperLightingMode)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(ExplosiveLightingMode.class)
+                .controller(opt -> EnumControllerBuilder.create(opt)
+                        .enumClass(ExplosiveLightingMode.class)
                         .formatValue(ExplosiveLightingMode::getTranslatedText))
                 .build());
 
         specialGroup.option(Option.<ExplosiveLightingMode>createBuilder()
                 .name(Text.translatable("block.minecraft.tnt"))
-                .description(OptionDescription.of(Text.translatable("lambdynlights.tooltip.tnt_lighting",
+                .description(OptionDescription.of(Text.translatable(
+                        "lambdynlights.tooltip.tnt_lighting",
                         ExplosiveLightingMode.OFF.getTranslatedText(),
                         ExplosiveLightingMode.SIMPLE.getTranslatedText(),
                         ExplosiveLightingMode.FANCY.getTranslatedText())))
-                .binding(config.getTntLightingMode(), config::getTntLightingMode, config::setTntLightingMode)
-                .controller(opt -> EnumControllerBuilder.create(opt).enumClass(ExplosiveLightingMode.class)
+                .binding(
+                        DynamicLightsConfigAccessor.getDefaultTntLightingMode(),
+                        config::getTntLightingMode,
+                        config::setTntLightingMode)
+                .controller(opt -> EnumControllerBuilder.create(opt)
+                        .enumClass(ExplosiveLightingMode.class)
                         .formatValue(ExplosiveLightingMode::getTranslatedText))
                 .build());
 
@@ -153,12 +176,12 @@ public class LDLCompat {
                 createBooleanOption(config.getBeamLighting(), "lambdynlights.option.light_sources.beam.tooltip"));
         specialGroup.option(
                 createBooleanOption(config.getFireflyLighting(), "lambdynlights.option.light_sources.firefly.tooltip"));
-        specialGroup.option(createBooleanOption(config.getGuardianLaser(),
-                "lambdynlights.option.light_sources.guardian_laser.tooltip"));
-        specialGroup.option(createBooleanOption(config.getSonicBoomLighting(),
-                "lambdynlights.option.light_sources.sonic_boom.tooltip"));
-        specialGroup.option(createBooleanOption(config.getGlowingEffectLighting(),
-                "lambdynlights.option.light_sources.glowing_effect.tooltip"));
+        specialGroup.option(createBooleanOption(
+                config.getGuardianLaser(), "lambdynlights.option.light_sources.guardian_laser.tooltip"));
+        specialGroup.option(createBooleanOption(
+                config.getSonicBoomLighting(), "lambdynlights.option.light_sources.sonic_boom.tooltip"));
+        specialGroup.option(createBooleanOption(
+                config.getGlowingEffectLighting(), "lambdynlights.option.light_sources.glowing_effect.tooltip"));
 
         builder.group(specialGroup.build());
 
@@ -167,35 +190,44 @@ public class LDLCompat {
                 .description(OptionDescription.of(Text.translatable("lambdynlights.menu.tabs.debug.description")))
                 .collapsed(true);
 
-        debugGroup.option(createBooleanOption(config.getDebugActiveDynamicLightingCells(),
+        debugGroup.option(createBooleanOption(
+                config.getDebugActiveDynamicLightingCells(),
                 "lambdynlights.option.debug.active_dynamic_lighting_cells.tooltip"));
 
         debugGroup.option(Option.<Integer>createBuilder()
                 .name(Text.translatable("lambdynlights.option.debug.cell_display_radius"))
-                .binding(config.getDebugCellDisplayRadius(), config::getDebugCellDisplayRadius,
+                .binding(
+                        DynamicLightsConfigAccessor.getDefaultDebugCellDisplayRadius(),
+                        config::getDebugCellDisplayRadius,
                         config::setDebugCellDisplayRadius)
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(0, 10)
                         .step(1)
-                        .formatValue(v -> v <= 0 ? Text.translatable("options.off").formatted(Formatting.RED)
+                        .formatValue(v -> v <= 0
+                                ? Text.translatable("options.off").formatted(Formatting.RED)
                                 : Text.literal(String.format("%d", v))))
                 .build());
 
-        debugGroup.option(createBooleanOption(config.getDebugDisplayDynamicLightingChunkRebuilds(),
+        debugGroup.option(createBooleanOption(
+                config.getDebugDisplayDynamicLightingChunkRebuilds(),
                 "lambdynlights.option.debug.display_dynamic_lighting_chunk_rebuild.tooltip"));
 
         debugGroup.option(Option.<Integer>createBuilder()
                 .name(Text.translatable("lambdynlights.option.debug.light_level_radius"))
-                .binding(config.getDebugLightLevelRadius(), config::getDebugLightLevelRadius,
+                .binding(
+                        DynamicLightsConfigAccessor.getDefaultDebugLightLevelRadius(),
+                        config::getDebugLightLevelRadius,
                         config::setDebugLightLevelRadius)
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(0, 10)
                         .step(1)
-                        .formatValue(v -> v <= 0 ? Text.translatable("options.off").formatted(Formatting.RED)
+                        .formatValue(v -> v <= 0
+                                ? Text.translatable("options.off").formatted(Formatting.RED)
                                 : Text.literal(String.format("%d", v))))
                 .build());
 
-        debugGroup.option(createBooleanOption(config.getDebugDisplayHandlerBoundingBox(),
+        debugGroup.option(createBooleanOption(
+                config.getDebugDisplayHandlerBoundingBox(),
                 "lambdynlights.option.debug.display_behavior_bounding_box.tooltip"));
 
         builder.group(debugGroup.build());
@@ -203,28 +235,31 @@ public class LDLCompat {
         return builder.build();
     }
 
+    @SuppressWarnings("unchecked")
     private static Option<Boolean> createBooleanOption(SettingEntry<Boolean> entry, String tooltipKey) {
         return Option.<Boolean>createBuilder()
                 .name(Text.translatable("lambdynlights.option." + entry.key()))
                 .description(OptionDescription.of(Text.translatable(tooltipKey)))
-                .binding(entry.get(), entry::get, entry::set)
+                .binding(((SettingEntryAccessor<Boolean>) (Object) entry).getDefaultValue(), entry::get, entry::set)
                 .controller(TickBoxControllerBuilder::create)
                 .build();
     }
 
-    private static Option<Integer> createAdaptiveTickingOption(String keySuffix, Supplier<Integer> getter,
-            Consumer<Integer> setter) {
+    private static Option<Integer> createAdaptiveTickingOption(
+            String keySuffix, Supplier<Integer> getter, Consumer<Integer> setter) {
+        int defaultValue = keySuffix.equals("slow")
+                ? DynamicLightsConfigAccessor.getDefaultSlowTickingDistance()
+                : DynamicLightsConfigAccessor.getDefaultSlowerTickingDistance();
         return Option.<Integer>createBuilder()
                 .name(Text.translatable("lambdynlights.option.adaptive_ticking." + keySuffix))
-                .description(OptionDescription
-                        .of(Text.translatable("lambdynlights.option.adaptive_ticking." + keySuffix + ".tooltip")))
-                .binding(getter.get() / 16,
-                        () -> getter.get() / 16,
-                        setter)
+                .description(OptionDescription.of(
+                        Text.translatable("lambdynlights.option.adaptive_ticking." + keySuffix + ".tooltip")))
+                .binding(defaultValue, () -> (int) (Math.sqrt(getter.get()) / 16), setter)
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(1, 33)
                         .step(1)
-                        .formatValue(v -> v == 33 ? Text.translatable("options.off").formatted(Formatting.RED)
+                        .formatValue(v -> v == 33
+                                ? Text.translatable("options.off").formatted(Formatting.RED)
                                 : Text.literal(String.valueOf(v))))
                 .build();
     }

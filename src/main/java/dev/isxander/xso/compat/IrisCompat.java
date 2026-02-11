@@ -6,7 +6,6 @@ import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.impl.controller.DropdownStringControllerBuilderImpl;
 import java.io.IOException;
-
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.fabricmc.loader.api.FabricLoader;
@@ -29,7 +28,8 @@ public class IrisCompat {
                             return new ShaderPackScreen(new Screen(Text.empty()) {
                                 @Override
                                 protected void init() {
-                                    client.setScreen(XandersSodiumOptions.wrapSodiumScreen(videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
+                                    client.setScreen(XandersSodiumOptions.wrapSodiumScreen(
+                                            videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
                                 }
                             });
                         } catch (Exception e) {
@@ -38,11 +38,11 @@ public class IrisCompat {
                             return new net.minecraft.client.gui.screen.NoticeScreen(
                                     () -> client.setScreen(null),
                                     Text.literal("Iris Integration Error"),
-                                    Text.literal(
-                                            "Xander's Sodium Options failed to open Iris settings screen.\n\n"
-                                                    + e.getMessage()));
+                                    Text.literal("Xander's Sodium Options failed to open Iris settings screen.\n\n"
+                                            + e.getMessage()));
                         }
-                    }).build();
+                    })
+                    .build();
         }
 
         var shaderPackList = Option.<String>createBuilder()

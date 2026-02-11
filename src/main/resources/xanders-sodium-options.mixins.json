@@ -8,6 +8,8 @@
     "SodiumOptionAccessor",
     "VideoSettingsScreenAccessor",
     "YACLScreenMixin",
+    "DynamicLightsConfigAccessor",
+    "SettingEntryAccessor",
     "yacl.CategoryTabMixin",
     "yacl.OptionListWidgetMixin",
     "yacl.TextScaledButtonWidgetMixin"
