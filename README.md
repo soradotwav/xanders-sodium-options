@@ -20,3 +20,5 @@ Any other mods which integrate with Sodium's GUI will *likely work* as well. If 
 ![Sodium Extra Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/838d0c2664e27fb8576c7bf8450977716f4e71be.png)
 
 Thank you to [Zakku0w0](https://ko-fi.com/zakku0w0/) for the Ko-fi icon art.
+
+/
