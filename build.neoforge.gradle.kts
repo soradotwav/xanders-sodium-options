@@ -9,12 +9,17 @@ base {
     archivesName = property("mod.name") as String
 }
 
+val mappingsAttribute: Attribute<String> = Attribute.of("net.minecraft.mappings", String::class.java)
+
 repositories {
     mavenCentral()
     maven("https://maven.isxander.dev/releases")
     maven("https://maven.isxander.dev/snapshots")
     maven("https://maven.bawnorton.com/releases")
     maven("https://maven.neoforged.net/releases/")
+    maven("https://maven.gegy.dev")
+    maven("https://maven.shedaniel.me")
+    maven("https://jitpack.io")
     exclusiveContent {
         forRepository {
             maven("https://api.modrinth.com/maven") { name = "Modrinth" }
@@ -42,9 +47,46 @@ neoForge {
 }
 
 dependencies {
-    // TODO: Add NeoForge-compatible dependencies
-    // implementation("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
-    // implementation("maven.modrinth:sodium:${property("deps.sodium")}")
+    attributesSchema {
+        attribute(mappingsAttribute)
+    }
+
+    implementation("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
+    jarJar("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
+
+    implementation("maven.modrinth:sodium:${property("deps.sodium")}")
+
+    implementation("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
+    implementation("maven.modrinth:moreculling:${property("deps.moreculling")}")
+
+    compileOnly("maven.modrinth:iris:${property("deps.iris")}")
+
+    implementation("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
+        attributes {
+            attribute(mappingsAttribute, "mojmap")
+        }
+    }
+
+    implementation("dev.lambdaurora:spruceui:${property("deps.spruceui")}") {
+        attributes {
+            attribute(mappingsAttribute, "mojmap")
+        }
+    }
+    jarJar("dev.lambdaurora:spruceui:[8.0.0,9.0.0)") {
+        attributes {
+            attribute(mappingsAttribute, "mojmap")
+        }
+    }
+    jarJar("dev.yumi.mc.core:yumi-mc-foundation:1.0.0-alpha.15+1.21.1") {
+        attributes {
+            attribute(mappingsAttribute, "mojmap")
+        }
+    }
+
+    runtimeOnly("maven.modrinth:cloth-config:${property("runtime.cloth")}")
+
+    implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-neoforge:0.2.0")!!)
+    jarJar("com.github.bawnorton.mixinsquared:mixinsquared-neoforge:0.2.0")
 }
 
 tasks.processResources {

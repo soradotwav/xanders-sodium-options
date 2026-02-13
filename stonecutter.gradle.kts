@@ -1,8 +1,8 @@
 plugins {
     id("dev.kikugie.stonecutter")
     id("net.fabricmc.fabric-loom-remap") version "1.15-SNAPSHOT" apply false
-    id("net.neoforged.moddev") version "2.0.85" apply false
-    id("com.diffplug.spotless") version "6.25.0" apply false
+    id("net.neoforged.moddev") version "2.0.140" apply false
+    id("com.diffplug.spotless") version "8.2.1" apply false
 }
 
 stonecutter active "1.21.11-fabric" /* [SC] DO NOT EDIT */
