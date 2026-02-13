@@ -141,7 +141,7 @@ public class IrisCompat {
     }
 
     public static void applyChanges() {
-        if (Compat.IRIS && dirty) {
+        if (dirty) {
             try {
                 Iris.getIrisConfig().save();
                 Iris.reload();

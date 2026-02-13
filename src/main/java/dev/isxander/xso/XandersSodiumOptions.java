@@ -63,24 +63,24 @@ public class XandersSodiumOptions {
                 }
             }
 
-            if (Compat.IRIS) {
+            if (Compat.IRIS.isLoaded) {
                 var irisCategory = IrisCompat.createShaderPacksCategory(prevScreen, videoSettingsScreen);
-                CategoryDescriptions.registerCategoryModId(irisCategory.name().getString(), "iris");
+                Compat.IRIS.registerCategory(irisCategory.name().getString());
                 categories.add(irisCategory);
             }
 
-            if (Compat.LAMBDYNAMICLIGHTS) {
+            if (Compat.LAMBDYNAMICLIGHTS.isLoaded) {
                 var lambdCategory = LDLCompat.createLdcCategory(prevScreen, videoSettingsScreen);
-                CategoryDescriptions.registerCategoryModId(lambdCategory.name().getString(), "lambdynlights");
+                Compat.LAMBDYNAMICLIGHTS.registerCategory(lambdCategory.name().getString());
                 categories.add(lambdCategory);
             }
 
             for (ModOptions mod : thirdPartyMods) {
-                if (Compat.IRIS && "iris".equals(mod.configId())) {
+                if (Compat.IRIS.isLoaded && Compat.IRIS.modId.equals(mod.configId())) {
                     continue;
                 }
 
-                if (Compat.LAMBDYNAMICLIGHTS && "lambdynlights".equals(mod.configId())) {
+                if (Compat.LAMBDYNAMICLIGHTS.isLoaded && Compat.LAMBDYNAMICLIGHTS.modId.equals(mod.configId())) {
                     continue;
                 }
 
@@ -103,8 +103,8 @@ public class XandersSodiumOptions {
                 net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.applyAllOptions();
                 XsoConfig.applyChanges();
 
-                if (Compat.LAMBDYNAMICLIGHTS) LDLCompat.applyChanges();
-                if (Compat.IRIS) IrisCompat.applyChanges();
+                if (Compat.LAMBDYNAMICLIGHTS.isLoaded) LDLCompat.applyChanges();
+                if (Compat.IRIS.isLoaded) IrisCompat.applyChanges();
             });
             return builder.build().generateScreen(prevScreen);
         } catch (Exception e) {
@@ -215,8 +215,8 @@ public class XandersSodiumOptions {
                         }
                     }
 
-                    if (Compat.MORE_CULLING
-                            && "moreculling".equals(mod.configId())
+                    if (Compat.MORE_CULLING.isLoaded
+                            && Compat.MORE_CULLING.modId.equals(mod.configId())
                             && groupBuilder == firstGroupBuilder) {
                         MoreCullingCompat.addResetCacheButton(groupBuilder);
                     }

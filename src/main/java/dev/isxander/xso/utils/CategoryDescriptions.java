@@ -24,13 +24,13 @@ public class CategoryDescriptions {
             "Performance", "xso.category.performance",
             "Advanced", "xso.category.advanced");
 
-    private static final Map<String, String> MOD_DESCRIPTIONS = Map.of(
-            "sodium-extra", "xso.category.sodium_extra",
-            "moreculling", "xso.category.moreculling",
-            "iris", "xso.category.iris",
-            "lambdynlights", "xso.category.lambdynlights",
-            "xanders-sodium-options", "xso.category.xso",
-            "entity-view-distance", "xso.category.entity_view_distance");
+    private static final Map<String, String> MOD_DESCRIPTIONS = new java.util.HashMap<>();
+
+    static {
+        for (dev.isxander.xso.compat.Compat mod : dev.isxander.xso.compat.Compat.values()) {
+            MOD_DESCRIPTIONS.put(mod.modId, mod.descriptionKey);
+        }
+    }
 
     private static final java.util.Set<String> EXTERNAL_MENU_MODS = java.util.Set.of("iris", "lambdynlights");
 

@@ -52,33 +52,43 @@ dependencies {
         attribute(mappingsAttribute)
     }
 
+    // Required Dependencies
     implementation("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
     jarJar("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
 
+    // Sodium (Required)
     implementation("net.caffeinemc:sodium-neoforge-mod:${property("deps.sodium")}")
     runtimeOnly("net.caffeinemc:sodium-neoforge:${property("deps.sodium")}")
 
-    implementation("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
-    implementation("maven.modrinth:moreculling:${property("deps.moreculling")}")
+    // Optional Compat: Sodium Extra
+    compileOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
+    runtimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
 
+    // Optional Compat: More Culling
+    compileOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
+    runtimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
+
+    // Optional Compat: Iris
     compileOnly("maven.modrinth:iris:${property("deps.iris")}")
+    //runtimeOnly("maven.modrinth:iris:${property("deps.iris")}")
 
-    implementation("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
-        attributes {
-            attribute(mappingsAttribute, "mojmap")
-        }
+    // Optional Compat: LambDynamicLights
+    compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
+        attributes { attribute(mappingsAttribute, "mojmap") }
+    }
+    runtimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
+        attributes { attribute(mappingsAttribute, "mojmap") }
     }
 
-    implementation("dev.lambdaurora:spruceui:${property("deps.spruceui")}") {
-        attributes {
-            attribute(mappingsAttribute, "mojmap")
-        }
+    // Optional Compat: SpruceUI (Required by LDL)
+    compileOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}") {
+        attributes { attribute(mappingsAttribute, "mojmap") }
     }
-    jarJar("dev.lambdaurora:spruceui:[8.0.0,9.0.0)") {
-        attributes {
-            attribute(mappingsAttribute, "mojmap")
-        }
+    runtimeOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}") {
+        attributes { attribute(mappingsAttribute, "mojmap") }
     }
+
+    // Internal libraries (YACL/MixinSquared)
     jarJar("dev.yumi.mc.core:yumi-mc-foundation:1.0.0-alpha.15+1.21.1") {
         attributes {
             attribute(mappingsAttribute, "mojmap")

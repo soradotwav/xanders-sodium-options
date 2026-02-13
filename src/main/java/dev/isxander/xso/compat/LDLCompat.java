@@ -256,7 +256,7 @@ public class LDLCompat {
     }
 
     public static void applyChanges() {
-        if (Compat.LAMBDYNAMICLIGHTS && dirty) {
+        if (dirty) {
             LambDynLights.get().config.save();
             dirty = false;
         }
