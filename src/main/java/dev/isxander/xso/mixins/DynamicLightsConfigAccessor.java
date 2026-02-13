@@ -1,4 +1,4 @@
-package dev.isxander.xso.mixins.compat;
+package dev.isxander.xso.mixins;
 
 import dev.lambdaurora.lambdynlights.ChunkRebuildSchedulerMode;
 import dev.lambdaurora.lambdynlights.DynamicLightsConfig;

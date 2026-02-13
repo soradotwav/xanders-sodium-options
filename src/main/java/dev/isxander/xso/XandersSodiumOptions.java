@@ -20,14 +20,14 @@ import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.AlertScreen;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.NoticeScreen;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ public class XandersSodiumOptions {
             VideoSettingsScreen videoSettingsScreen, List<ModOptions> modOptionsList, Screen prevScreen) {
         try {
             YetAnotherConfigLib.Builder builder =
-                    YetAnotherConfigLib.createBuilder().title(Component.translatable("options.videoTitle"));
+                    YetAnotherConfigLib.createBuilder().title(Text.translatable("options.videoTitle"));
 
             CategoryDescriptions.clearRegistrations();
 
@@ -63,24 +63,24 @@ public class XandersSodiumOptions {
                 }
             }
 
-            if (Compat.IRIS.isLoaded) {
+            if (Compat.IRIS) {
                 var irisCategory = IrisCompat.createShaderPacksCategory(prevScreen, videoSettingsScreen);
-                Compat.IRIS.registerCategory(irisCategory.name().getString());
+                CategoryDescriptions.registerCategoryModId(irisCategory.name().getString(), "iris");
                 categories.add(irisCategory);
             }
 
-            if (Compat.LAMBDYNAMICLIGHTS.isLoaded) {
+            if (Compat.LAMBDYNAMICLIGHTS) {
                 var lambdCategory = LDLCompat.createLdcCategory(prevScreen, videoSettingsScreen);
-                Compat.LAMBDYNAMICLIGHTS.registerCategory(lambdCategory.name().getString());
+                CategoryDescriptions.registerCategoryModId(lambdCategory.name().getString(), "lambdynlights");
                 categories.add(lambdCategory);
             }
 
             for (ModOptions mod : thirdPartyMods) {
-                if (Compat.IRIS.isLoaded && Compat.IRIS.modId.equals(mod.configId())) {
+                if (Compat.IRIS && "iris".equals(mod.configId())) {
                     continue;
                 }
 
-                if (Compat.LAMBDYNAMICLIGHTS.isLoaded && Compat.LAMBDYNAMICLIGHTS.modId.equals(mod.configId())) {
+                if (Compat.LAMBDYNAMICLIGHTS && "lambdynlights".equals(mod.configId())) {
                     continue;
                 }
 
@@ -102,9 +102,8 @@ public class XandersSodiumOptions {
             builder.save(() -> {
                 net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.applyAllOptions();
                 XsoConfig.applyChanges();
-
-                if (Compat.LAMBDYNAMICLIGHTS.isLoaded) LDLCompat.applyChanges();
-                if (Compat.IRIS.isLoaded) IrisCompat.applyChanges();
+                LDLCompat.applyChanges();
+                IrisCompat.applyChanges();
             });
             return builder.build().generateScreen(prevScreen);
         } catch (Exception e) {
@@ -115,16 +114,16 @@ public class XandersSodiumOptions {
             } else {
                 LOGGER.error("Failed to convert Sodium GUI to YACL", exception);
 
-                return new AlertScreen(
+                return new NoticeScreen(
                         () -> {
                             errorOccurred = true;
-                            Minecraft.getInstance().setScreen(videoSettingsScreen);
+                            MinecraftClient.getInstance().setScreen(videoSettingsScreen);
                             errorOccurred = false;
                         },
-                        Component.literal("Xander's Sodium Options failed"),
-                        Component.literal(
+                        Text.literal("Xander's Sodium Options failed"),
+                        Text.literal(
                                 "Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occurred which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."),
-                        CommonComponents.GUI_PROCEED,
+                        ScreenTexts.PROCEED,
                         true);
             }
         }
@@ -140,7 +139,7 @@ public class XandersSodiumOptions {
                     new LinkedHashMap<>();
 
             for (var group : page.groups()) {
-                categoryBuilder.option(LabelOption.create(Component.empty()));
+                categoryBuilder.option(LabelOption.create(Text.empty()));
 
                 for (var option : group.options()) {
                     var yaclOption = convertOption(option);
@@ -174,7 +173,7 @@ public class XandersSodiumOptions {
             }
 
             ConfigCategory.Builder categoryBuilder =
-                    ConfigCategory.createBuilder().name(Component.literal(mod.name()));
+                    ConfigCategory.createBuilder().name(Text.literal(mod.name()));
 
             Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap =
                     new LinkedHashMap<>();
@@ -182,7 +181,7 @@ public class XandersSodiumOptions {
             if (optionPages.size() == 1) {
                 OptionPage page = optionPages.getFirst();
                 for (var group : page.groups()) {
-                    categoryBuilder.option(LabelOption.create(Component.empty()));
+                    categoryBuilder.option(LabelOption.create(Text.empty()));
 
                     for (var option : group.options()) {
                         var yaclOption = convertOption(option);
@@ -204,7 +203,7 @@ public class XandersSodiumOptions {
                     boolean first = true;
                     for (var group : page.groups()) {
                         if (!first) {
-                            groupBuilder.option(LabelOption.create(Component.empty()));
+                            groupBuilder.option(LabelOption.create(Text.empty()));
                         }
                         first = false;
 
@@ -215,8 +214,8 @@ public class XandersSodiumOptions {
                         }
                     }
 
-                    if (Compat.MORE_CULLING.isLoaded
-                            && Compat.MORE_CULLING.modId.equals(mod.configId())
+                    if (Compat.MORE_CULLING
+                            && "moreculling".equals(mod.configId())
                             && groupBuilder == firstGroupBuilder) {
                         MoreCullingCompat.addResetCacheButton(groupBuilder);
                     }
@@ -256,10 +255,9 @@ public class XandersSodiumOptions {
                         .name(sodiumOption.getName())
                         .description(OptionDescription.of(
                                 sodiumOption.getTooltip(),
-                                Component.translatable("xso.incompatible.tooltip")
-                                        .withStyle(ChatFormatting.RED)))
+                                Text.translatable("xso.incompatible.tooltip").formatted(Formatting.RED)))
                         .available(false)
-                        .text(Component.translatable("xso.incompatible.button").withStyle(ChatFormatting.RED))
+                        .text(Text.translatable("xso.incompatible.button").formatted(Formatting.RED))
                         .action((screen, opt) -> {})
                         .build();
             } else {
@@ -273,14 +271,14 @@ public class XandersSodiumOptions {
     }
 
     private static Option<Boolean> convertBooleanOption(BooleanOption option) {
-        MutableComponent descText = option.getTooltip().copy();
+        MutableText descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Component.translatable(
+                    .append(Text.translatable(
                                     "sodium.options.performance_impact_string",
                                     option.getImpact().getName())
-                            .withStyle(ChatFormatting.GRAY));
+                            .formatted(Formatting.GRAY));
         }
 
         return dev.isxander.yacl3.api.Option.<Boolean>createBuilder()
@@ -294,14 +292,14 @@ public class XandersSodiumOptions {
     }
 
     private static Option<Integer> convertIntegerOption(IntegerOption option) {
-        MutableComponent descText = option.getTooltip().copy();
+        MutableText descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Component.translatable(
+                    .append(Text.translatable(
                                     "sodium.options.performance_impact_string",
                                     option.getImpact().getName())
-                            .withStyle(ChatFormatting.GRAY));
+                            .formatted(Formatting.GRAY));
         }
 
         var validator = option.getSteppedValidator();
@@ -321,14 +319,14 @@ public class XandersSodiumOptions {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static <E extends Enum<E>> Option<E> convertEnumOption(EnumOption<E> option) {
-        MutableComponent descText = option.getTooltip().copy();
+        MutableText descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Component.translatable(
+                    .append(Text.translatable(
                                     "sodium.options.performance_impact_string",
                                     option.getImpact().getName())
-                            .withStyle(ChatFormatting.GRAY));
+                            .formatted(Formatting.GRAY));
         }
 
         return dev.isxander.yacl3.api.Option.<E>createBuilder()
@@ -348,7 +346,7 @@ public class XandersSodiumOptions {
                 .name(option.getName())
                 .description(OptionDescription.of(option.getTooltip()))
                 .available(option.isEnabled())
-                .text(Component.literal("➔"))
+                .text(Text.literal("➔"))
                 .action((screen, opt) -> option.getCurrentScreenConsumer().accept(screen))
                 .build();
     }

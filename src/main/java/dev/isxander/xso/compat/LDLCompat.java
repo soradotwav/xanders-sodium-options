@@ -2,8 +2,8 @@ package dev.isxander.xso.compat;
 
 import dev.isxander.xso.XandersSodiumOptions;
 import dev.isxander.xso.config.XsoConfig;
-import dev.isxander.xso.mixins.compat.DynamicLightsConfigAccessor;
-import dev.isxander.xso.mixins.compat.SettingEntryAccessor;
+import dev.isxander.xso.mixins.DynamicLightsConfigAccessor;
+import dev.isxander.xso.mixins.SettingEntryAccessor;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
@@ -20,10 +20,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.registry.Registries;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 @SuppressWarnings({"UnstableApiUsage"})
 public class LDLCompat {
@@ -32,13 +32,13 @@ public class LDLCompat {
     public static ConfigCategory createLdcCategory(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
         if (XsoConfig.INSTANCE.instance().externalMenus) {
             return PlaceholderCategory.createBuilder()
-                    .name(Component.translatable("lambdynlights"))
+                    .name(Text.translatable("lambdynlights"))
                     .screen((client, screen) -> {
                         try {
-                            Screen proxy = new Screen(Component.empty()) {
+                            Screen proxy = new Screen(Text.empty()) {
                                 @Override
                                 protected void init() {
-                                    minecraft.setScreen(XandersSodiumOptions.wrapSodiumScreen(
+                                    client.setScreen(XandersSodiumOptions.wrapSodiumScreen(
                                             videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
                                 }
                             };
@@ -46,10 +46,10 @@ public class LDLCompat {
                         } catch (Exception e) {
                             XandersSodiumOptions.LOGGER.error("Failed to open LambDynamicLights settings screen", e);
 
-                            return new net.minecraft.client.gui.screens.AlertScreen(
+                            return new net.minecraft.client.gui.screen.NoticeScreen(
                                     () -> client.setScreen(null),
-                                    Component.literal("LambDynamicLights Integration Error"),
-                                    Component.literal(
+                                    Text.literal("LambDynamicLights Integration Error"),
+                                    Text.literal(
                                             "Xander's Sodium Options failed to open LambDynamicLights settings screen.\n\n"
                                                     + e.getMessage()));
                         }
@@ -59,14 +59,14 @@ public class LDLCompat {
 
         DynamicLightsConfig config = LambDynLights.get().config;
 
-        ConfigCategory.Builder builder = ConfigCategory.createBuilder().name(Component.translatable("lambdynlights"));
+        ConfigCategory.Builder builder = ConfigCategory.createBuilder().name(Text.translatable("lambdynlights"));
 
         OptionGroup.Builder generalGroup = OptionGroup.createBuilder()
-                .name(Component.translatable("lambdynlights.menu.tabs.general"))
+                .name(Text.translatable("lambdynlights.menu.tabs.general"))
                 .collapsed(false);
 
         generalGroup.option(Option.<DynamicLightsMode>createBuilder()
-                .name(Component.translatable("lambdynlights.option.mode"))
+                .name(Text.translatable("lambdynlights.option.mode"))
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultDynamicLightsMode(),
                         config::getDynamicLightsMode,
@@ -88,12 +88,12 @@ public class LDLCompat {
         builder.group(generalGroup.build());
 
         OptionGroup.Builder performanceGroup = OptionGroup.createBuilder()
-                .name(Component.translatable("lambdynlights.menu.tabs.performance"))
+                .name(Text.translatable("lambdynlights.menu.tabs.performance"))
                 .collapsed(false);
 
         performanceGroup.option(Option.<ChunkRebuildSchedulerMode>createBuilder()
-                .name(Component.translatable("lambdynlights.option.chunk_rebuild_scheduler"))
-                .description(OptionDescription.of(Component.translatable(
+                .name(Text.translatable("lambdynlights.option.chunk_rebuild_scheduler"))
+                .description(OptionDescription.of(Text.translatable(
                         "lambdynlights.option.chunk_rebuild_scheduler.tooltip",
                         ChunkRebuildSchedulerMode.CULLING.getTranslatedText(),
                         ChunkRebuildSchedulerMode.IMMEDIATE.getTranslatedText())))
@@ -124,36 +124,34 @@ public class LDLCompat {
         builder.group(performanceGroup.build());
 
         OptionGroup.Builder entitiesGroup = OptionGroup.createBuilder()
-                .name(Component.translatable("lambdynlights.menu.light_sources"))
+                .name(Text.translatable("lambdynlights.menu.light_sources"))
                 .collapsed(true);
 
-        BuiltInRegistries.ENTITY_TYPE.stream()
-                .map(DynamicLightHandlerHolder::cast)
-                .forEach(holder -> {
-                    var setting = holder.lambdynlights$getSetting();
-                    if (setting != null) {
-                        @SuppressWarnings("unchecked")
-                        var binding = ((SettingEntryAccessor<Boolean>) (Object) setting).getDefaultValue();
-                        entitiesGroup.option(Option.<Boolean>createBuilder()
-                                .name(holder.lambdynlights$getName())
-                                .binding(binding, setting::get, val -> {
-                                    setting.set(val);
-                                    dirty = true;
-                                })
-                                .controller(TickBoxControllerBuilder::create)
-                                .build());
-                    }
-                });
+        Registries.ENTITY_TYPE.stream().map(DynamicLightHandlerHolder::cast).forEach(holder -> {
+            var setting = holder.lambdynlights$getSetting();
+            if (setting != null) {
+                @SuppressWarnings("unchecked")
+                var binding = ((SettingEntryAccessor<Boolean>) (Object) setting).getDefaultValue();
+                entitiesGroup.option(Option.<Boolean>createBuilder()
+                        .name(holder.lambdynlights$getName())
+                        .binding(binding, setting::get, val -> {
+                            setting.set(val);
+                            dirty = true;
+                        })
+                        .controller(TickBoxControllerBuilder::create)
+                        .build());
+            }
+        });
 
         builder.group(entitiesGroup.build());
 
         OptionGroup.Builder specialGroup = OptionGroup.createBuilder()
-                .name(Component.translatable("lambdynlights.menu.tabs.dynamic_lights.special"))
+                .name(Text.translatable("lambdynlights.menu.tabs.dynamic_lights.special"))
                 .collapsed(false);
 
         specialGroup.option(Option.<ExplosiveLightingMode>createBuilder()
-                .name(Component.translatable("entity.minecraft.creeper"))
-                .description(OptionDescription.of(Component.translatable(
+                .name(Text.translatable("entity.minecraft.creeper"))
+                .description(OptionDescription.of(Text.translatable(
                         "lambdynlights.tooltip.creeper_lighting",
                         ExplosiveLightingMode.OFF.getTranslatedText(),
                         ExplosiveLightingMode.SIMPLE.getTranslatedText(),
@@ -171,8 +169,8 @@ public class LDLCompat {
                 .build());
 
         specialGroup.option(Option.<ExplosiveLightingMode>createBuilder()
-                .name(Component.translatable("block.minecraft.tnt"))
-                .description(OptionDescription.of(Component.translatable(
+                .name(Text.translatable("block.minecraft.tnt"))
+                .description(OptionDescription.of(Text.translatable(
                         "lambdynlights.tooltip.tnt_lighting",
                         ExplosiveLightingMode.OFF.getTranslatedText(),
                         ExplosiveLightingMode.SIMPLE.getTranslatedText(),
@@ -200,8 +198,8 @@ public class LDLCompat {
         builder.group(specialGroup.build());
 
         OptionGroup.Builder debugGroup = OptionGroup.createBuilder()
-                .name(Component.translatable("lambdynlights.menu.tabs.debug"))
-                .description(OptionDescription.of(Component.translatable("lambdynlights.menu.tabs.debug.description")))
+                .name(Text.translatable("lambdynlights.menu.tabs.debug"))
+                .description(OptionDescription.of(Text.translatable("lambdynlights.menu.tabs.debug.description")))
                 .collapsed(true);
 
         debugGroup.option(createBooleanOption(
@@ -209,7 +207,7 @@ public class LDLCompat {
                 "lambdynlights.option.debug.active_dynamic_lighting_cells.tooltip"));
 
         debugGroup.option(Option.<Integer>createBuilder()
-                .name(Component.translatable("lambdynlights.option.debug.cell_display_radius"))
+                .name(Text.translatable("lambdynlights.option.debug.cell_display_radius"))
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultDebugCellDisplayRadius(),
                         config::getDebugCellDisplayRadius,
@@ -221,8 +219,8 @@ public class LDLCompat {
                         .range(0, 10)
                         .step(1)
                         .formatValue(v -> v <= 0
-                                ? Component.translatable("options.off").withStyle(ChatFormatting.RED)
-                                : Component.literal(String.format("%d", v))))
+                                ? Text.translatable("options.off").formatted(Formatting.RED)
+                                : Text.literal(String.format("%d", v))))
                 .build());
 
         debugGroup.option(createBooleanOption(
@@ -230,7 +228,7 @@ public class LDLCompat {
                 "lambdynlights.option.debug.display_dynamic_lighting_chunk_rebuild.tooltip"));
 
         debugGroup.option(Option.<Integer>createBuilder()
-                .name(Component.translatable("lambdynlights.option.debug.light_level_radius"))
+                .name(Text.translatable("lambdynlights.option.debug.light_level_radius"))
                 .binding(
                         DynamicLightsConfigAccessor.getDefaultDebugLightLevelRadius(),
                         config::getDebugLightLevelRadius,
@@ -242,8 +240,8 @@ public class LDLCompat {
                         .range(0, 10)
                         .step(1)
                         .formatValue(v -> v <= 0
-                                ? Component.translatable("options.off").withStyle(ChatFormatting.RED)
-                                : Component.literal(String.format("%d", v))))
+                                ? Text.translatable("options.off").formatted(Formatting.RED)
+                                : Text.literal(String.format("%d", v))))
                 .build());
 
         debugGroup.option(createBooleanOption(
@@ -256,7 +254,7 @@ public class LDLCompat {
     }
 
     public static void applyChanges() {
-        if (dirty) {
+        if (Compat.LAMBDYNAMICLIGHTS && dirty) {
             LambDynLights.get().config.save();
             dirty = false;
         }
@@ -265,8 +263,8 @@ public class LDLCompat {
     @SuppressWarnings("unchecked")
     private static Option<Boolean> createBooleanOption(SettingEntry<Boolean> entry, String tooltipKey) {
         return Option.<Boolean>createBuilder()
-                .name(Component.translatable("lambdynlights.option." + entry.key()))
-                .description(OptionDescription.of(Component.translatable(tooltipKey)))
+                .name(Text.translatable("lambdynlights.option." + entry.key()))
+                .description(OptionDescription.of(Text.translatable(tooltipKey)))
                 .binding(((SettingEntryAccessor<Boolean>) entry).getDefaultValue(), entry::get, val -> {
                     entry.set(val);
                     dirty = true;
@@ -281,16 +279,16 @@ public class LDLCompat {
                 ? DynamicLightsConfigAccessor.getDefaultSlowTickingDistance()
                 : DynamicLightsConfigAccessor.getDefaultSlowerTickingDistance();
         return Option.<Integer>createBuilder()
-                .name(Component.translatable("lambdynlights.option.adaptive_ticking." + keySuffix))
+                .name(Text.translatable("lambdynlights.option.adaptive_ticking." + keySuffix))
                 .description(OptionDescription.of(
-                        Component.translatable("lambdynlights.option.adaptive_ticking." + keySuffix + ".tooltip")))
+                        Text.translatable("lambdynlights.option.adaptive_ticking." + keySuffix + ".tooltip")))
                 .binding(defaultValue, () -> (int) (Math.sqrt(getter.get()) / 16), setter)
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(1, 33)
                         .step(1)
                         .formatValue(v -> v == 33
-                                ? Component.translatable("options.off").withStyle(ChatFormatting.RED)
-                                : Component.literal(String.valueOf(v))))
+                                ? Text.translatable("options.off").formatted(Formatting.RED)
+                                : Text.literal(String.valueOf(v))))
                 .build();
     }
 }

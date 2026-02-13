@@ -1,14 +1,14 @@
-package dev.isxander.xso.mixins.yacl;
+package dev.isxander.xso.mixins;
 
 import dev.isxander.xso.utils.XsoDonationButton;
 import dev.isxander.yacl3.gui.YACLScreen;
 import java.util.List;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.tabs.Tab;
-import net.minecraft.client.gui.components.tabs.TabManager;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tab.Tab;
+import net.minecraft.client.gui.tab.TabManager;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,17 +27,17 @@ public abstract class YACLScreenMixin extends Screen {
     public dev.isxander.yacl3.gui.tab.ScrollableNavigationBar tabNavigationBar;
 
     @Unique
-    private Button xso$donationButton;
+    private ButtonWidget xso$donationButton;
 
-    protected YACLScreenMixin(Component title) {
+    protected YACLScreenMixin(Text title) {
         super(title);
     }
 
     @Inject(method = "init", at = @At("TAIL"))
     private void xso$addDonationButton(CallbackInfo ci) {
-        EditBox searchField = null;
+        TextFieldWidget searchField = null;
         for (var child : this.children()) {
-            if (child instanceof EditBox tf) {
+            if (child instanceof TextFieldWidget tf) {
                 searchField = tf;
                 break;
             }
@@ -57,7 +57,7 @@ public abstract class YACLScreenMixin extends Screen {
                     searchField.getY() + (searchField.getHeight() - buttonSize) / 2,
                     buttonSize,
                     buttonSize);
-            this.addRenderableWidget(this.xso$donationButton);
+            this.addDrawableChild(this.xso$donationButton);
         }
     }
 
