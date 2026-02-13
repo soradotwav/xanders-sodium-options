@@ -1,3 +1,5 @@
+//? fabric {
+/*
 package dev.isxander.xso.config;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
@@ -16,3 +18,5 @@ public class ModMenuEntrypoint implements ModMenuApi {
                 .generateScreen(parent);
     }
 }
+ */
+//?}

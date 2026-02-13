@@ -8,9 +8,16 @@ import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+
+//? fabric {
+/*
+import net.fabricmc.loader.api.FabricLoader;
+ */
+//?} elif neoforge {
+import net.neoforged.fml.loading.FMLPaths;
+//?}
 
 public class XsoConfig {
     private static boolean dirty = false;
@@ -18,7 +25,13 @@ public class XsoConfig {
     public static final ConfigClassHandler<XsoConfig> INSTANCE = ConfigClassHandler.createBuilder(XsoConfig.class)
             .id(Identifier.fromNamespaceAndPath("xso", "config"))
             .serializer(handler -> GsonConfigSerializerBuilder.create(handler)
+                    //? fabric {
+                    /*
                     .setPath(FabricLoader.getInstance().getConfigDir().resolve("xanders-sodium-options.json"))
+                     */
+                    //?} elif neoforge {
+                    .setPath(FMLPaths.CONFIGDIR.get().resolve("xanders-sodium-options.json"))
+                    //?}
                     .appendGsonBuilder(com.google.gson.GsonBuilder::setPrettyPrinting)
                     .build())
             .build();

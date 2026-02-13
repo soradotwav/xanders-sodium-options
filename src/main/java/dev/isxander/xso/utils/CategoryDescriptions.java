@@ -4,8 +4,15 @@ import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.gui.DescriptionWithName;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
+
+//? fabric {
+/*
+import net.fabricmc.loader.api.FabricLoader;
+*/
+//?} elif neoforge {
+import net.neoforged.fml.ModList;
+//?}
 
 public class CategoryDescriptions {
 
@@ -70,10 +77,25 @@ public class CategoryDescriptions {
             return DescriptionWithName.of(categoryName, OptionDescription.of(description));
         }
 
+
+        //? fabric {
+        /*
         return FabricLoader.getInstance()
                 .getModContainer(modId)
+         */
+        //?} elif neoforge {
+        return ModList.get().getModContainerById(modId)
+        //?}
                 .map(container -> {
+
+                    //? fabric {
+                    /*
                     String desc = container.getMetadata().getDescription();
+                     */
+                    //?} elif neoforge {
+                    String desc = container.getModInfo().getDescription();
+                    //?}
+
                     if (desc != null && !desc.isBlank()) {
                         return DescriptionWithName.of(categoryName, OptionDescription.of(Component.literal(desc)));
                     }

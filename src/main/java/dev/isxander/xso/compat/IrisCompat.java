@@ -8,7 +8,6 @@ import dev.isxander.yacl3.impl.controller.DropdownStringControllerBuilderImpl;
 import java.io.IOException;
 import net.caffeinemc.mods.sodium.client.config.ConfigManager;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
-import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.Minecraft;
@@ -16,6 +15,14 @@ import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
+
+//? fabric {
+/*
+import net.fabricmc.loader.api.FabricLoader;
+ */
+//?} elif neoforge {
+import net.neoforged.fml.loading.FMLPaths;
+//?}
 
 public class IrisCompat {
     private static boolean dirty = false;
@@ -119,7 +126,13 @@ public class IrisCompat {
                                 Component.translatable("options.iris.openShaderPacksFolder.description")))
                         .action((screen, opt) -> Util.getPlatform()
                                 .openPath(
+                                        //? fabric {
+                                        /*
                                         FabricLoader.getInstance().getGameDir().resolve("shaderpacks/")))
+                                         */
+                                        //?} elif neoforge {
+                                        FMLPaths.GAMEDIR.get().resolve("shaderpacks/")))
+                                        //?}
                         .build())
                 .option(LabelOption.create(Component.translatable("options.iris.shaderPackOptions")))
                 .option(enableShaders)

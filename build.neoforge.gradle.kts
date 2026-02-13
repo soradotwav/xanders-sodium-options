@@ -41,7 +41,7 @@ neoForge {
     }
 
     mods {
-        register("xanders-sodium-options") {
+        register("xanders_sodium_options") {
             sourceSet(sourceSets.main.get())
         }
     }
@@ -91,6 +91,8 @@ dependencies {
 }
 
 tasks.processResources {
+    exclude("fabric.mod.json")
+
     val props = mapOf(
         "mod_version" to project.version,
         "target_minecraft" to project.property("mod.target"),

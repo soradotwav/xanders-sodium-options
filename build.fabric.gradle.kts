@@ -63,6 +63,8 @@ dependencies {
 }
 
 tasks.processResources {
+    exclude("META-INF/neoforge.mods.toml")
+
     val props = mapOf(
             "mod_version" to project.version,
             "target_minecraft" to project.property("mod.target"),

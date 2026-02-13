@@ -1,0 +1,42 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "LGPL-3.0-or-later"
+
+[[mods]]
+modId = "xanders_sodium_options"
+version = "${mod_version}"
+displayName = "Xander's Sodium Options: Continued"
+description = "Replaces the Sodium options GUI with vanilla-style alternatives."
+authors = "isXander, IMB11, soradotwav"
+logoFile = "icon.png"
+
+[[mixins]]
+config = "xanders-sodium-options.mixins.json"
+
+[[dependencies."xanders_sodium_options"]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.11,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies."xanders_sodium_options"]]
+modId = "minecraft"
+type = "required"
+versionRange = "[${target_minecraft},)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies."xanders_sodium_options"]]
+modId = "sodium"
+type = "required"
+versionRange = "[${target_sodium},)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies."xanders_sodium_options"]]
+modId = "yet_another_config_lib_v3"
+type = "required"
+versionRange = "[3.6.0,)"
+ordering = "AFTER"
+side = "CLIENT"
