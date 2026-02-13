@@ -20,14 +20,14 @@ import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.NoticeScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.AlertScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ public class XandersSodiumOptions {
             VideoSettingsScreen videoSettingsScreen, List<ModOptions> modOptionsList, Screen prevScreen) {
         try {
             YetAnotherConfigLib.Builder builder =
-                    YetAnotherConfigLib.createBuilder().title(Text.translatable("options.videoTitle"));
+                    YetAnotherConfigLib.createBuilder().title(Component.translatable("options.videoTitle"));
 
             CategoryDescriptions.clearRegistrations();
 
@@ -114,16 +114,16 @@ public class XandersSodiumOptions {
             } else {
                 LOGGER.error("Failed to convert Sodium GUI to YACL", exception);
 
-                return new NoticeScreen(
+                return new AlertScreen(
                         () -> {
                             errorOccurred = true;
-                            MinecraftClient.getInstance().setScreen(videoSettingsScreen);
+                            Minecraft.getInstance().setScreen(videoSettingsScreen);
                             errorOccurred = false;
                         },
-                        Text.literal("Xander's Sodium Options failed"),
-                        Text.literal(
+                        Component.literal("Xander's Sodium Options failed"),
+                        Component.literal(
                                 "Whilst trying to convert Sodium's GUI to YACL with XSO mod, an error occurred which prevented the conversion. This is most likely due to a third-party mod adding its own settings to Sodium's screen. XSO will now display the original GUI.\n\nThe error has been logged to latest.log file."),
-                        ScreenTexts.PROCEED,
+                        CommonComponents.GUI_PROCEED,
                         true);
             }
         }
@@ -139,7 +139,7 @@ public class XandersSodiumOptions {
                     new LinkedHashMap<>();
 
             for (var group : page.groups()) {
-                categoryBuilder.option(LabelOption.create(Text.empty()));
+                categoryBuilder.option(LabelOption.create(Component.empty()));
 
                 for (var option : group.options()) {
                     var yaclOption = convertOption(option);
@@ -173,7 +173,7 @@ public class XandersSodiumOptions {
             }
 
             ConfigCategory.Builder categoryBuilder =
-                    ConfigCategory.createBuilder().name(Text.literal(mod.name()));
+                    ConfigCategory.createBuilder().name(Component.literal(mod.name()));
 
             Map<dev.isxander.yacl3.api.Option<?>, net.caffeinemc.mods.sodium.client.config.structure.Option> optionMap =
                     new LinkedHashMap<>();
@@ -181,7 +181,7 @@ public class XandersSodiumOptions {
             if (optionPages.size() == 1) {
                 OptionPage page = optionPages.getFirst();
                 for (var group : page.groups()) {
-                    categoryBuilder.option(LabelOption.create(Text.empty()));
+                    categoryBuilder.option(LabelOption.create(Component.empty()));
 
                     for (var option : group.options()) {
                         var yaclOption = convertOption(option);
@@ -203,7 +203,7 @@ public class XandersSodiumOptions {
                     boolean first = true;
                     for (var group : page.groups()) {
                         if (!first) {
-                            groupBuilder.option(LabelOption.create(Text.empty()));
+                            groupBuilder.option(LabelOption.create(Component.empty()));
                         }
                         first = false;
 
@@ -255,9 +255,10 @@ public class XandersSodiumOptions {
                         .name(sodiumOption.getName())
                         .description(OptionDescription.of(
                                 sodiumOption.getTooltip(),
-                                Text.translatable("xso.incompatible.tooltip").formatted(Formatting.RED)))
+                                Component.translatable("xso.incompatible.tooltip")
+                                        .withStyle(ChatFormatting.RED)))
                         .available(false)
-                        .text(Text.translatable("xso.incompatible.button").formatted(Formatting.RED))
+                        .text(Component.translatable("xso.incompatible.button").withStyle(ChatFormatting.RED))
                         .action((screen, opt) -> {})
                         .build();
             } else {
@@ -271,14 +272,14 @@ public class XandersSodiumOptions {
     }
 
     private static Option<Boolean> convertBooleanOption(BooleanOption option) {
-        MutableText descText = option.getTooltip().copy();
+        MutableComponent descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Text.translatable(
+                    .append(Component.translatable(
                                     "sodium.options.performance_impact_string",
                                     option.getImpact().getName())
-                            .formatted(Formatting.GRAY));
+                            .withStyle(ChatFormatting.GRAY));
         }
 
         return dev.isxander.yacl3.api.Option.<Boolean>createBuilder()
@@ -292,14 +293,14 @@ public class XandersSodiumOptions {
     }
 
     private static Option<Integer> convertIntegerOption(IntegerOption option) {
-        MutableText descText = option.getTooltip().copy();
+        MutableComponent descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Text.translatable(
+                    .append(Component.translatable(
                                     "sodium.options.performance_impact_string",
                                     option.getImpact().getName())
-                            .formatted(Formatting.GRAY));
+                            .withStyle(ChatFormatting.GRAY));
         }
 
         var validator = option.getSteppedValidator();
@@ -319,14 +320,14 @@ public class XandersSodiumOptions {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static <E extends Enum<E>> Option<E> convertEnumOption(EnumOption<E> option) {
-        MutableText descText = option.getTooltip().copy();
+        MutableComponent descText = option.getTooltip().copy();
 
         if (option.getImpact() != null) {
             descText = descText.append("\n")
-                    .append(Text.translatable(
+                    .append(Component.translatable(
                                     "sodium.options.performance_impact_string",
                                     option.getImpact().getName())
-                            .formatted(Formatting.GRAY));
+                            .withStyle(ChatFormatting.GRAY));
         }
 
         return dev.isxander.yacl3.api.Option.<E>createBuilder()
@@ -346,7 +347,7 @@ public class XandersSodiumOptions {
                 .name(option.getName())
                 .description(OptionDescription.of(option.getTooltip()))
                 .available(option.isEnabled())
-                .text(Text.literal("➔"))
+                .text(Component.literal("➔"))
                 .action((screen, opt) -> option.getCurrentScreenConsumer().accept(screen))
                 .build();
     }

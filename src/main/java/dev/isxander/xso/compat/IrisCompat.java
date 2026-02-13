@@ -11,10 +11,10 @@ import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.gui.screen.ShaderPackScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConfirmLinkScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 
 public class IrisCompat {
@@ -23,23 +23,23 @@ public class IrisCompat {
     public static ConfigCategory createShaderPacksCategory(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
         if (XsoConfig.INSTANCE.instance().externalMenus) {
             return PlaceholderCategory.createBuilder()
-                    .name(Text.translatable("options.iris.shaderPackSelection.title"))
+                    .name(Component.translatable("options.iris.shaderPackSelection.title"))
                     .screen((client, screen) -> {
                         try {
-                            return new ShaderPackScreen(new Screen(Text.empty()) {
+                            return new ShaderPackScreen(new Screen(Component.empty()) {
                                 @Override
                                 protected void init() {
-                                    client.setScreen(XandersSodiumOptions.wrapSodiumScreen(
+                                    minecraft.setScreen(XandersSodiumOptions.wrapSodiumScreen(
                                             videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
                                 }
                             });
                         } catch (Exception e) {
                             XandersSodiumOptions.LOGGER.error("Failed to open Iris settings screen", e);
 
-                            return new net.minecraft.client.gui.screen.NoticeScreen(
+                            return new net.minecraft.client.gui.screens.AlertScreen(
                                     () -> client.setScreen(null),
-                                    Text.literal("Iris Integration Error"),
-                                    Text.literal("Xander's Sodium Options failed to open Iris settings screen.\n\n"
+                                    Component.literal("Iris Integration Error"),
+                                    Component.literal("Xander's Sodium Options failed to open Iris settings screen.\n\n"
                                             + e.getMessage()));
                         }
                     })
@@ -47,8 +47,9 @@ public class IrisCompat {
         }
 
         var shaderPackList = Option.<String>createBuilder()
-                .name(Text.translatable("options.iris.selectedShaderPack"))
-                .description(OptionDescription.of(Text.translatable("options.iris.selectedShaderPack.description")))
+                .name(Component.translatable("options.iris.selectedShaderPack"))
+                .description(
+                        OptionDescription.of(Component.translatable("options.iris.selectedShaderPack.description")))
                 .binding(
                         Iris.getIrisConfig().getShaderPackName().orElse(""),
                         () -> Iris.getIrisConfig().getShaderPackName().orElse(""),
@@ -70,8 +71,8 @@ public class IrisCompat {
                 .build();
 
         var enableShaders = Option.<Boolean>createBuilder()
-                .name(Text.translatable("options.iris.enableShaders"))
-                .description(OptionDescription.of(Text.translatable("options.iris.enableShaders.description")))
+                .name(Component.translatable("options.iris.enableShaders"))
+                .description(OptionDescription.of(Component.translatable("options.iris.enableShaders.description")))
                 .binding(true, () -> Iris.getIrisConfig().areShadersEnabled(), (val) -> {
                     Iris.getIrisConfig().setShadersEnabled(val);
                     dirty = true;
@@ -86,40 +87,41 @@ public class IrisCompat {
                 .build();
 
         return ConfigCategory.createBuilder()
-                .name(Text.translatable("options.iris.shaderPackSelection.title"))
-                .option(LabelOption.create(Text.empty()))
+                .name(Component.translatable("options.iris.shaderPackSelection.title"))
+                .option(LabelOption.create(Component.empty()))
                 .option(ButtonOption.createBuilder()
-                        .name(Text.translatable("options.iris.openShaderPackScreen"))
-                        .text(Text.literal("➔"))
+                        .name(Component.translatable("options.iris.openShaderPackScreen"))
+                        .text(Component.literal("➔"))
                         .description(OptionDescription.of(
-                                Text.translatable("options.iris.openShaderPackScreen.description")))
-                        .action((screen, opt) -> MinecraftClient.getInstance().setScreen(new ShaderPackScreen(screen)))
+                                Component.translatable("options.iris.openShaderPackScreen.description")))
+                        .action((screen, opt) -> Minecraft.getInstance().setScreen(new ShaderPackScreen(screen)))
                         .build())
                 .option(ButtonOption.createBuilder()
-                        .name(Text.translatable("options.iris.downloadShaders"))
-                        .text(Text.literal("➔"))
-                        .description(
-                                OptionDescription.of(Text.translatable("options.iris.downloadShaders.description")))
-                        .action((screen, opt) -> MinecraftClient.getInstance()
+                        .name(Component.translatable("options.iris.downloadShaders"))
+                        .text(Component.literal("➔"))
+                        .description(OptionDescription.of(
+                                Component.translatable("options.iris.downloadShaders.description")))
+                        .action((screen, opt) -> Minecraft.getInstance()
                                 .setScreen(new ConfirmLinkScreen(
                                         (bl) -> {
                                             if (bl) {
-                                                Util.getOperatingSystem().open("https://modrinth.com/shaders");
+                                                Util.getPlatform().openUri("https://modrinth.com/shaders");
                                             }
-                                            MinecraftClient.getInstance().setScreen(screen);
+                                            Minecraft.getInstance().setScreen(screen);
                                         },
                                         "https://modrinth.com/shaders",
                                         true)))
                         .build())
                 .option(ButtonOption.createBuilder()
-                        .name(Text.translatable("options.iris.openShaderPackFolder"))
-                        .text(Text.literal("➔"))
+                        .name(Component.translatable("options.iris.openShaderPackFolder"))
+                        .text(Component.literal("➔"))
                         .description(OptionDescription.of(
-                                Text.translatable("options.iris.openShaderPacksFolder.description")))
-                        .action((screen, opt) -> Util.getOperatingSystem()
-                                .open(FabricLoader.getInstance().getGameDir().resolve("shaderpacks/")))
+                                Component.translatable("options.iris.openShaderPacksFolder.description")))
+                        .action((screen, opt) -> Util.getPlatform()
+                                .openPath(
+                                        FabricLoader.getInstance().getGameDir().resolve("shaderpacks/")))
                         .build())
-                .option(LabelOption.create(Text.translatable("options.iris.shaderPackOptions")))
+                .option(LabelOption.create(Component.translatable("options.iris.shaderPackOptions")))
                 .option(enableShaders)
                 .option(shaderPackList)
                 .build();

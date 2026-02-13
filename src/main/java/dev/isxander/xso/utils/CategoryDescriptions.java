@@ -5,7 +5,7 @@ import dev.isxander.yacl3.gui.DescriptionWithName;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 public class CategoryDescriptions {
 
@@ -37,12 +37,12 @@ public class CategoryDescriptions {
         categoryModIds.clear();
     }
 
-    public static DescriptionWithName getDefault(Text categoryName) {
+    public static DescriptionWithName getDefault(Component categoryName) {
         String name = categoryName.getString();
 
         String sodiumKey = SODIUM_TAB_DESCRIPTIONS.get(name);
         if (sodiumKey != null) {
-            return DescriptionWithName.of(categoryName, OptionDescription.of(Text.translatable(sodiumKey)));
+            return DescriptionWithName.of(categoryName, OptionDescription.of(Component.translatable(sodiumKey)));
         }
 
         String modId = categoryModIds.get(name);
@@ -50,20 +50,21 @@ public class CategoryDescriptions {
             return getDefaultForMod(categoryName, modId);
         }
 
-        return DescriptionWithName.of(categoryName, OptionDescription.of(Text.translatable("xso.category.fallback")));
+        return DescriptionWithName.of(
+                categoryName, OptionDescription.of(Component.translatable("xso.category.fallback")));
     }
 
-    private static DescriptionWithName getDefaultForMod(Text categoryName, String modId) {
+    private static DescriptionWithName getDefaultForMod(Component categoryName, String modId) {
         String customKey = MOD_DESCRIPTIONS.get(modId);
         if (customKey != null) {
-            net.minecraft.text.MutableText description = Text.translatable(customKey);
+            net.minecraft.network.chat.MutableComponent description = Component.translatable(customKey);
 
             if (EXTERNAL_MENU_MODS.contains(modId)) {
                 description = description
                         .append("\n\n")
-                        .append(Text.translatable("xso.hint.use_external_menu")
-                                .formatted(
-                                        net.minecraft.util.Formatting.DARK_GRAY, net.minecraft.util.Formatting.ITALIC));
+                        .append(Component.translatable("xso.hint.use_external_menu")
+                                .withStyle(
+                                        net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
             }
 
             return DescriptionWithName.of(categoryName, OptionDescription.of(description));
@@ -74,13 +75,13 @@ public class CategoryDescriptions {
                 .map(container -> {
                     String desc = container.getMetadata().getDescription();
                     if (desc != null && !desc.isBlank()) {
-                        return DescriptionWithName.of(categoryName, OptionDescription.of(Text.literal(desc)));
+                        return DescriptionWithName.of(categoryName, OptionDescription.of(Component.literal(desc)));
                     }
                     return DescriptionWithName.of(
-                            categoryName, OptionDescription.of(Text.translatable("xso.category.fallback")));
+                            categoryName, OptionDescription.of(Component.translatable("xso.category.fallback")));
                 })
                 .orElseGet(() -> DescriptionWithName.of(
-                        categoryName, OptionDescription.of(Text.translatable("xso.category.fallback"))));
+                        categoryName, OptionDescription.of(Component.translatable("xso.category.fallback"))));
     }
 
     public static boolean isLabelOptionSpacer(DescriptionWithName desc) {
