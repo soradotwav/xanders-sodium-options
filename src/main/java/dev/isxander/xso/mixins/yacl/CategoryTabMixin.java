@@ -4,7 +4,7 @@ import dev.isxander.xso.utils.CategoryDescriptions;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.gui.OptionDescriptionWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
-import net.minecraft.client.gui.ScreenRect;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +19,7 @@ public class CategoryTabMixin {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void xso$setDefaultDescription(
-            YACLScreen screen, ConfigCategory category, ScreenRect tabArea, CallbackInfo ci) {
+            YACLScreen screen, ConfigCategory category, ScreenRectangle tabArea, CallbackInfo ci) {
         this.descriptionWidget.setOptionDescription(CategoryDescriptions.getDefault(category.name()));
     }
 }

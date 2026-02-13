@@ -4,8 +4,15 @@ import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.gui.DescriptionWithName;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.network.chat.Component;
+
+//? fabric {
+/*
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.text.Text;
+*/
+//?} elif neoforge {
+import net.neoforged.fml.ModList;
+//?}
 
 public class CategoryDescriptions {
 
@@ -17,13 +24,13 @@ public class CategoryDescriptions {
             "Performance", "xso.category.performance",
             "Advanced", "xso.category.advanced");
 
-    private static final Map<String, String> MOD_DESCRIPTIONS = Map.of(
-            "sodium-extra", "xso.category.sodium_extra",
-            "moreculling", "xso.category.moreculling",
-            "iris", "xso.category.iris",
-            "lambdynlights", "xso.category.lambdynlights",
-            "xanders-sodium-options", "xso.category.xso",
-            "entity-view-distance", "xso.category.entity_view_distance");
+    private static final Map<String, String> MOD_DESCRIPTIONS = new java.util.HashMap<>();
+
+    static {
+        for (dev.isxander.xso.compat.Compat mod : dev.isxander.xso.compat.Compat.values()) {
+            MOD_DESCRIPTIONS.put(mod.modId, mod.descriptionKey);
+        }
+    }
 
     private static final java.util.Set<String> EXTERNAL_MENU_MODS = java.util.Set.of("iris", "lambdynlights");
 
@@ -37,12 +44,12 @@ public class CategoryDescriptions {
         categoryModIds.clear();
     }
 
-    public static DescriptionWithName getDefault(Text categoryName) {
+    public static DescriptionWithName getDefault(Component categoryName) {
         String name = categoryName.getString();
 
         String sodiumKey = SODIUM_TAB_DESCRIPTIONS.get(name);
         if (sodiumKey != null) {
-            return DescriptionWithName.of(categoryName, OptionDescription.of(Text.translatable(sodiumKey)));
+            return DescriptionWithName.of(categoryName, OptionDescription.of(Component.translatable(sodiumKey)));
         }
 
         String modId = categoryModIds.get(name);
@@ -50,37 +57,53 @@ public class CategoryDescriptions {
             return getDefaultForMod(categoryName, modId);
         }
 
-        return DescriptionWithName.of(categoryName, OptionDescription.of(Text.translatable("xso.category.fallback")));
+        return DescriptionWithName.of(
+                categoryName, OptionDescription.of(Component.translatable("xso.category.fallback")));
     }
 
-    private static DescriptionWithName getDefaultForMod(Text categoryName, String modId) {
+    private static DescriptionWithName getDefaultForMod(Component categoryName, String modId) {
         String customKey = MOD_DESCRIPTIONS.get(modId);
         if (customKey != null) {
-            net.minecraft.text.MutableText description = Text.translatable(customKey);
+            net.minecraft.network.chat.MutableComponent description = Component.translatable(customKey);
 
             if (EXTERNAL_MENU_MODS.contains(modId)) {
                 description = description
                         .append("\n\n")
-                        .append(Text.translatable("xso.hint.use_external_menu")
-                                .formatted(
-                                        net.minecraft.util.Formatting.DARK_GRAY, net.minecraft.util.Formatting.ITALIC));
+                        .append(Component.translatable("xso.hint.use_external_menu")
+                                .withStyle(
+                                        net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
             }
 
             return DescriptionWithName.of(categoryName, OptionDescription.of(description));
         }
 
+
+        //? fabric {
+        /*
         return FabricLoader.getInstance()
                 .getModContainer(modId)
+         */
+        //?} elif neoforge {
+        return ModList.get().getModContainerById(modId)
+        //?}
                 .map(container -> {
+
+                    //? fabric {
+                    /*
                     String desc = container.getMetadata().getDescription();
+                     */
+                    //?} elif neoforge {
+                    String desc = container.getModInfo().getDescription();
+                    //?}
+
                     if (desc != null && !desc.isBlank()) {
-                        return DescriptionWithName.of(categoryName, OptionDescription.of(Text.literal(desc)));
+                        return DescriptionWithName.of(categoryName, OptionDescription.of(Component.literal(desc)));
                     }
                     return DescriptionWithName.of(
-                            categoryName, OptionDescription.of(Text.translatable("xso.category.fallback")));
+                            categoryName, OptionDescription.of(Component.translatable("xso.category.fallback")));
                 })
                 .orElseGet(() -> DescriptionWithName.of(
-                        categoryName, OptionDescription.of(Text.translatable("xso.category.fallback"))));
+                        categoryName, OptionDescription.of(Component.translatable("xso.category.fallback"))));
     }
 
     public static boolean isLabelOptionSpacer(DescriptionWithName desc) {

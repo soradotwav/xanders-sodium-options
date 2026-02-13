@@ -1,14 +1,14 @@
-package dev.isxander.xso.mixins;
+package dev.isxander.xso.mixins.yacl;
 
 import dev.isxander.xso.utils.XsoDonationButton;
 import dev.isxander.yacl3.gui.YACLScreen;
 import java.util.List;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tab.Tab;
-import net.minecraft.client.gui.tab.TabManager;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.tabs.Tab;
+import net.minecraft.client.gui.components.tabs.TabManager;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,17 +27,17 @@ public abstract class YACLScreenMixin extends Screen {
     public dev.isxander.yacl3.gui.tab.ScrollableNavigationBar tabNavigationBar;
 
     @Unique
-    private ButtonWidget xso$donationButton;
+    private Button xso$donationButton;
 
-    protected YACLScreenMixin(Text title) {
+    protected YACLScreenMixin(Component title) {
         super(title);
     }
 
     @Inject(method = "init", at = @At("TAIL"))
     private void xso$addDonationButton(CallbackInfo ci) {
-        TextFieldWidget searchField = null;
+        EditBox searchField = null;
         for (var child : this.children()) {
-            if (child instanceof TextFieldWidget tf) {
+            if (child instanceof EditBox tf) {
                 searchField = tf;
                 break;
             }
@@ -57,7 +57,7 @@ public abstract class YACLScreenMixin extends Screen {
                     searchField.getY() + (searchField.getHeight() - buttonSize) / 2,
                     buttonSize,
                     buttonSize);
-            this.addDrawableChild(this.xso$donationButton);
+            this.addRenderableWidget(this.xso$donationButton);
         }
     }
 
