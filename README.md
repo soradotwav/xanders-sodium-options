@@ -11,7 +11,7 @@ It has a wide range of support for various mods which integrate with Sodium, suc
 -   [Cull Less Leaves](https://modrinth.com/mod/cull-less-leaves)
 -   [EntityViewDistance](https://modrinth.com/mod/entity-view-distance)
 
-Any other mods which integrate with Sodium's GUI will *likely work* as well. If you encounter any issues, please [report them here](https://github.com/soradotwav/xanders-sodium-options/issues) and/or join the [Discord server](https://discord.gg/TKzfYvmcYh).
+Any other mods which integrate with Sodium's GUI will *likely work* as well. If you encounter any issues, please [report them here](https://github.com/soradotwav/xanders-sodium-options/issues)
 
 ### Screenshots
 ![General Tab](https://cdn.modrinth.com/data/fGB38jk4/images/f29afb5dd207d066256b251dd601585517193725.png)
