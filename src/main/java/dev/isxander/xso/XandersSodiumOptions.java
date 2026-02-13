@@ -102,8 +102,9 @@ public class XandersSodiumOptions {
             builder.save(() -> {
                 net.caffeinemc.mods.sodium.client.config.ConfigManager.CONFIG.applyAllOptions();
                 XsoConfig.applyChanges();
-                LDLCompat.applyChanges();
-                IrisCompat.applyChanges();
+
+                if (Compat.LAMBDYNAMICLIGHTS) LDLCompat.applyChanges();
+                if (Compat.IRIS) IrisCompat.applyChanges();
             });
             return builder.build().generateScreen(prevScreen);
         } catch (Exception e) {

@@ -56,6 +56,7 @@ dependencies {
     jarJar("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
 
     implementation("net.caffeinemc:sodium-neoforge-mod:${property("deps.sodium")}")
+    runtimeOnly("net.caffeinemc:sodium-neoforge:${property("deps.sodium")}")
 
     implementation("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
     implementation("maven.modrinth:moreculling:${property("deps.moreculling")}")
