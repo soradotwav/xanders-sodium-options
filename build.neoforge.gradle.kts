@@ -2,7 +2,7 @@ plugins {
     id("net.neoforged.moddev")
 }
 
-version = "${property("mod.version")}+${sc.current.version}"
+version = "${property("mod.version")}+${sc.current.version}-neoforge"
 group = "dev.isxander"
 
 base {
@@ -132,6 +132,6 @@ tasks.jar {
 tasks.register<Copy>("buildAndCollect") {
     group = "build"
     from(tasks.named("jar").map { (it as org.gradle.jvm.tasks.Jar).archiveFile })
-    into(rootProject.layout.buildDirectory.file("libs"))
+    into(rootProject.layout.buildDirectory.dir("libs/neoforge"))
     dependsOn("build")
 }

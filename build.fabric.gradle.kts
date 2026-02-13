@@ -2,7 +2,7 @@ plugins {
     id("net.fabricmc.fabric-loom-remap")
 }
 
-version = "${property("mod.version")}+${sc.current.version}"
+version = "${property("mod.version")}+${sc.current.version}-fabric"
 group = "dev.isxander"
 
 base {
@@ -111,7 +111,7 @@ tasks.jar {
 tasks.register<Copy>("buildAndCollect") {
     group = "build"
     from(tasks.named("remapJar").map { (it as org.gradle.jvm.tasks.Jar).archiveFile })
-    into(rootProject.layout.buildDirectory.file("libs"))
+    into(rootProject.layout.buildDirectory.dir("libs/fabric"))
     dependsOn("build")
 }
 
