@@ -20,6 +20,7 @@ repositories {
     maven("https://maven.gegy.dev")
     maven("https://maven.shedaniel.me")
     maven("https://jitpack.io")
+    maven("https://maven.caffeinemc.net/releases")
     exclusiveContent {
         forRepository {
             maven("https://api.modrinth.com/maven") { name = "Modrinth" }
@@ -54,7 +55,7 @@ dependencies {
     implementation("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
     jarJar("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
 
-    implementation("maven.modrinth:sodium:${property("deps.sodium")}")
+    implementation("net.caffeinemc:sodium-neoforge-mod:${property("deps.sodium")}")
 
     implementation("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
     implementation("maven.modrinth:moreculling:${property("deps.moreculling")}")

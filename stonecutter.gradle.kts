@@ -5,7 +5,7 @@ plugins {
     id("com.diffplug.spotless") version "8.2.1" apply false
 }
 
-stonecutter active "1.21.11-fabric" /* [SC] DO NOT EDIT */
+stonecutter active "1.21.11-neoforge" /* [SC] DO NOT EDIT */
 
 stonecutter parameters {
     val loader = node.metadata.project.substringAfterLast('-')
