@@ -3,12 +3,12 @@ package dev.isxander.xso.compat;
 import dev.isxander.xso.utils.CategoryDescriptions;
 
 //? fabric {
-/*
+
 import net.fabricmc.loader.api.FabricLoader;
- */
+ 
 //?} elif neoforge {
-import net.neoforged.fml.ModList;
-//?}
+/*import net.neoforged.fml.ModList;
+*///?}
 
 public enum Compat {
     SODIUM_EXTRA("sodium-extra", "xso.category.sodium_extra"),
@@ -18,12 +18,12 @@ public enum Compat {
     LAMBDYNAMICLIGHTS(
 
             //? fabric {
-            /*
+            
             "lambdynlights",
-            */
+            
             //?} elif neoforge {
-            "lambdynlights_runtime",
-            //?}
+            /*"lambdynlights_runtime",
+            *///?}
             "xso.category.lambdynlights"
     ),
 
@@ -46,12 +46,12 @@ public enum Compat {
 
     private static boolean mod(String id) {
         //? fabric {
-        /*
+        
         return FabricLoader.getInstance().isModLoaded(id);
-         */
+         
         //?} elif neoforge {
-        return ModList.get().isLoaded(id);
-        //?}
+        /*return ModList.get().isLoaded(id);
+        *///?}
     }
 }
 

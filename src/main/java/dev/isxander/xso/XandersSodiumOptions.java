@@ -1,7 +1,5 @@
 package dev.isxander.xso;
 
-import static net.caffeinemc.mods.sodium.api.config.option.OptionFlag.*;
-
 import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.xso.mixins.SodiumOptionAccessor;
@@ -288,7 +286,6 @@ public class XandersSodiumOptions {
                 .description(OptionDescription.of(descText))
                 .binding(new SodiumBinding<>(option))
                 .available(option.isEnabled())
-                .flags(convertFlags(option))
                 .controller(TickBoxControllerBuilder::create)
                 .build();
     }
@@ -311,7 +308,6 @@ public class XandersSodiumOptions {
                 .description(OptionDescription.of(descText))
                 .binding(new SodiumBinding<>(option))
                 .available(option.isEnabled())
-                .flags(convertFlags(option))
                 .controller(opt -> IntegerSliderControllerBuilder.create(opt)
                         .range(validator.min(), validator.max())
                         .step(validator.step())
@@ -336,7 +332,6 @@ public class XandersSodiumOptions {
                 .description(OptionDescription.of(descText))
                 .binding(new SodiumBinding<>(option))
                 .available(option.isEnabled())
-                .flags(convertFlags(option))
                 .controller(opt -> new EnumControllerBuilderImpl<>((Option) opt)
                         .formatValue(value -> option.getElementName((E) value))
                         .enumClass(option.getEnumClass()))
@@ -351,29 +346,6 @@ public class XandersSodiumOptions {
                 .text(Component.literal("➔"))
                 .action((screen, opt) -> option.getCurrentScreenConsumer().accept(screen))
                 .build();
-    }
-
-    private static List<OptionFlag> convertFlags(net.caffeinemc.mods.sodium.client.config.structure.Option option) {
-        List<OptionFlag> flags = new ArrayList<>();
-        var sodiumFlags = option.getFlags();
-
-        if (sodiumFlags == null) {
-            return flags;
-        }
-
-        if (sodiumFlags.contains(REQUIRES_RENDERER_RELOAD.getId())) {
-            flags.add(OptionFlag.RELOAD_CHUNKS);
-        } else if (sodiumFlags.contains(REQUIRES_RENDERER_UPDATE.getId())) {
-            flags.add(OptionFlag.WORLD_RENDER_UPDATE);
-        }
-        if (sodiumFlags.contains(REQUIRES_ASSET_RELOAD.getId())) {
-            flags.add(OptionFlag.ASSET_RELOAD);
-        }
-        if (sodiumFlags.contains(REQUIRES_GAME_RESTART.getId())) {
-            flags.add(OptionFlag.GAME_RESTART);
-        }
-
-        return flags;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

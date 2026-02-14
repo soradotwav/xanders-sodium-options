@@ -17,12 +17,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 
 //? fabric {
-/*
+
 import net.fabricmc.loader.api.FabricLoader;
- */
+ 
 //?} elif neoforge {
-import net.neoforged.fml.loading.FMLPaths;
-//?}
+/*import net.neoforged.fml.loading.FMLPaths;
+*///?}
 
 public class IrisCompat {
     private static boolean dirty = false;
@@ -127,12 +127,12 @@ public class IrisCompat {
                         .action((screen, opt) -> Util.getPlatform()
                                 .openPath(
                                         //? fabric {
-                                        /*
+                                        
                                         FabricLoader.getInstance().getGameDir().resolve("shaderpacks/")))
-                                         */
+                                         
                                         //?} elif neoforge {
-                                        FMLPaths.GAMEDIR.get().resolve("shaderpacks/")))
-                                        //?}
+                                        /*FMLPaths.GAMEDIR.get().resolve("shaderpacks/")))
+                                        *///?}
                         .build())
                 .option(LabelOption.create(Component.translatable("options.iris.shaderPackOptions")))
                 .option(enableShaders)
