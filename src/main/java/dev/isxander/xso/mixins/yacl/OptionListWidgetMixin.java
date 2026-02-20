@@ -35,7 +35,11 @@ public class OptionListWidgetMixin {
         return incoming;
     }
 
-    @ModifyVariable(method = "nextEntry*", at = @At("HEAD"), argsOnly = true)
+    @ModifyVariable(
+            method =
+                    "nextEntry(Lnet/minecraft/client/gui/navigation/ScreenDirection;Ljava/util/function/Predicate;Ldev/isxander/yacl3/gui/OptionListWidget$Entry;)Ldev/isxander/yacl3/gui/OptionListWidget$Entry;",
+            at = @At("HEAD"),
+            argsOnly = true)
     private Predicate<OptionListWidget.Entry> xso$skipEmptySpacers(Predicate<OptionListWidget.Entry> predicate) {
         return entry -> predicate.test(entry) && !xso$isEmptySpacer(entry);
     }
