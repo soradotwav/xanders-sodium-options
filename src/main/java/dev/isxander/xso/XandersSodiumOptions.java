@@ -4,6 +4,7 @@ import dev.isxander.xso.compat.*;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.xso.mixins.SodiumOptionAccessor;
 import dev.isxander.xso.utils.CategoryDescriptions;
+import dev.isxander.xso.utils.XsoDonationScope;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
@@ -104,7 +105,11 @@ public class XandersSodiumOptions {
                 if (Compat.LAMBDYNAMICLIGHTS.isLoaded) LDLCompat.applyChanges();
                 if (Compat.IRIS.isLoaded) IrisCompat.applyChanges();
             });
-            return builder.build().generateScreen(prevScreen);
+            Screen screen = builder.build().generateScreen(prevScreen);
+            if (screen instanceof XsoDonationScope scoped) {
+                scoped.xso$setDonationScoped(true);
+            }
+            return screen;
         } catch (Exception e) {
             var exception = new IllegalStateException("Failed to convert Sodium option screen to YACL with XSO!", e);
 

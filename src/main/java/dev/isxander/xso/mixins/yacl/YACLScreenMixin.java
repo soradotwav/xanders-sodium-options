@@ -1,6 +1,7 @@
 package dev.isxander.xso.mixins.yacl;
 
 import dev.isxander.xso.utils.XsoDonationButton;
+import dev.isxander.xso.utils.XsoDonationScope;
 import dev.isxander.yacl3.gui.YACLScreen;
 import java.util.List;
 import net.minecraft.client.gui.components.Button;
@@ -21,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = YACLScreen.class)
-public abstract class YACLScreenMixin extends Screen {
+public abstract class YACLScreenMixin extends Screen implements XsoDonationScope {
     @Final
     @Shadow
     public TabManager tabManager;
@@ -31,6 +32,8 @@ public abstract class YACLScreenMixin extends Screen {
 
     @Unique
     private Button xso$donationButton;
+    @Unique
+    private boolean xso$donationScoped;
 
     protected YACLScreenMixin(Component title) {
         super(title);
@@ -38,6 +41,10 @@ public abstract class YACLScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void xso$addDonationButton(CallbackInfo ci) {
+        if (!this.xso$donationScoped) {
+            return;
+        }
+
         EditBox searchField = null;
         for (var child : this.children()) {
             if (child instanceof EditBox tf) {
@@ -67,6 +74,12 @@ public abstract class YACLScreenMixin extends Screen {
     @Inject(method = "tick", at = @At("HEAD"))
     private void xso$updateDonationButtonVisibility(CallbackInfo ci) {
         if (this.xso$donationButton == null) {
+            return;
+        }
+
+        if (!this.xso$donationScoped) {
+            this.xso$donationButton.visible = false;
+            this.xso$donationButton.active = false;
             return;
         }
 
@@ -116,5 +129,10 @@ public abstract class YACLScreenMixin extends Screen {
             this.tabNavigationBar.setScrollOffset(
                     this.tabNavigationBar.getScrollOffset() + (right - visibleRight));
         }
+    }
+
+    @Override
+    public void xso$setDonationScoped(boolean scoped) {
+        this.xso$donationScoped = scoped;
     }
 }
