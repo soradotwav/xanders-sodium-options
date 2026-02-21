@@ -9,6 +9,7 @@
     "VideoSettingsScreenAccessor",
     "yacl.YACLScreenMixin",
     "compat.DynamicLightsConfigAccessor",
+    "compat.FancyMenuScreenCustomizationMixin",
     "compat.SettingEntryAccessor",
     "yacl.CategoryTabMixin",
     "yacl.OptionListWidgetMixin",
