@@ -13,6 +13,13 @@ It has a wide range of support for various mods which integrate with Sodium, suc
 
 Any other mods which integrate with Sodium's GUI will *likely work* as well. If you encounter any issues, please [report them here](https://github.com/soradotwav/xanders-sodium-options/issues)
 
+### Keyboard Controls
+- `Ctrl+Tab` / `Ctrl+Shift+Tab`: Switch between category tabs.
+- `Tab` / `Shift+Tab`: Move focus between controls and action buttons.
+- Arrow keys: Navigate through option rows and category tabs when those widgets are focused.
+- `Enter` or `Space`: Activate the focused control, including the `Reset` button.
+- `Esc`: Show a save warning if there are unsaved changes. Press `Esc` again to discard changes and exit.
+
 ### Screenshots
 ![General Tab](https://cdn.modrinth.com/data/fGB38jk4/images/f29afb5dd207d066256b251dd601585517193725.png)
 ![Iris Compatibility](https://cdn.modrinth.com/data/fGB38jk4/images/72e52cee7a83988b107ad4dc6bcc4c3cdff67b39.png)

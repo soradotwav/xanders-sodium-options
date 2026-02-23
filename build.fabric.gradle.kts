@@ -62,6 +62,9 @@ dependencies {
     modCompileOnly("maven.modrinth:iris:${property("deps.iris")}")
     modRuntimeOnly("maven.modrinth:iris:${property("deps.iris")}")
 
+    // Optional Compat: FancyMenu
+    modCompileOnly("maven.modrinth:fancymenu:${property("deps.fancymenu")}")
+
     // Optional Compat: LambDynamicLights
     modCompileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
     modRuntimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")

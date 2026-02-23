@@ -1,14 +1,19 @@
 package dev.isxander.xso.mixins.yacl;
 
 import dev.isxander.xso.utils.XsoDonationButton;
+import dev.isxander.xso.utils.XsoDonationScope;
 import dev.isxander.yacl3.gui.YACLScreen;
 import java.util.List;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.TabButton;
 import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.components.tabs.TabManager;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NonNull;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = YACLScreen.class)
-public abstract class YACLScreenMixin extends Screen {
+public abstract class YACLScreenMixin extends Screen implements XsoDonationScope {
     @Final
     @Shadow
     public TabManager tabManager;
@@ -28,6 +33,10 @@ public abstract class YACLScreenMixin extends Screen {
 
     @Unique
     private Button xso$donationButton;
+    @Unique
+    private boolean xso$donationScoped;
+    @Unique
+    private int xso$discardEscGraceTicks;
 
     protected YACLScreenMixin(Component title) {
         super(title);
@@ -35,6 +44,10 @@ public abstract class YACLScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void xso$addDonationButton(CallbackInfo ci) {
+        if (!this.xso$donationScoped) {
+            return;
+        }
+
         EditBox searchField = null;
         for (var child : this.children()) {
             if (child instanceof EditBox tf) {
@@ -63,7 +76,20 @@ public abstract class YACLScreenMixin extends Screen {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void xso$updateDonationButtonVisibility(CallbackInfo ci) {
+        if (this.xso$discardEscGraceTicks > 0) {
+            this.xso$discardEscGraceTicks--;
+            if (!((YACLScreen) (Object) this).pendingChanges()) {
+                this.xso$discardEscGraceTicks = 0;
+            }
+        }
+
         if (this.xso$donationButton == null) {
+            return;
+        }
+
+        if (!this.xso$donationScoped) {
+            this.xso$donationButton.visible = false;
+            this.xso$donationButton.active = false;
             return;
         }
 
@@ -76,5 +102,61 @@ public abstract class YACLScreenMixin extends Screen {
         }
         this.xso$donationButton.visible = isFirstTab;
         this.xso$donationButton.active = isFirstTab;
+    }
+
+    @Override
+    public boolean keyPressed(@NonNull KeyEvent keyEvent) {
+        if (this.tabNavigationBar != null
+                && keyEvent.hasControlDownWithQuirk()
+                && this.tabNavigationBar.keyPressed(keyEvent)) {
+            this.xso$ensureSelectedTabVisible();
+            return true;
+        }
+
+        if (this.xso$donationScoped
+                && keyEvent.key() == GLFW.GLFW_KEY_ESCAPE
+                && ((YACLScreen) (Object) this).pendingChanges()) {
+            if (this.xso$discardEscGraceTicks > 0) {
+                ((YACLScreen) (Object) this).cancelOrReset();
+                this.xso$discardEscGraceTicks = 0;
+                return true;
+            }
+
+            this.xso$discardEscGraceTicks = 40;
+            return super.keyPressed(keyEvent);
+        }
+
+        this.xso$discardEscGraceTicks = 0;
+        return super.keyPressed(keyEvent);
+    }
+
+    @Unique
+    private void xso$ensureSelectedTabVisible() {
+        final int navMargin = 28;
+
+        int selectedIndex = this.tabNavigationBar.getTabs().indexOf(this.tabManager.getCurrentTab());
+        if (selectedIndex < 0) return;
+
+        var children = this.tabNavigationBar.children();
+        if (selectedIndex >= children.size()) return;
+
+        if (!(children.get(selectedIndex) instanceof TabButton tabButton)) return;
+
+        int left = tabButton.getX();
+        int right = left + tabButton.getWidth();
+        int visibleRight = this.width - navMargin;
+
+        if (left < navMargin) {
+            this.tabNavigationBar.setScrollOffset(
+                    this.tabNavigationBar.getScrollOffset() - (navMargin - left));
+        } else if (right > visibleRight) {
+            this.tabNavigationBar.setScrollOffset(
+                    this.tabNavigationBar.getScrollOffset() + (right - visibleRight));
+        }
+    }
+
+    @Override
+    public void xso$setDonationScoped(boolean scoped) {
+        this.xso$donationScoped = scoped;
     }
 }

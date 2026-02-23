@@ -72,6 +72,9 @@ dependencies {
     compileOnly("maven.modrinth:iris:${property("deps.iris")}")
     //runtimeOnly("maven.modrinth:iris:${property("deps.iris")}")
 
+    // Optional Compat: FancyMenu
+    compileOnly("maven.modrinth:fancymenu:${property("deps.fancymenu")}")
+
     // Optional Compat: LambDynamicLights
     compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
         attributes { attribute(mappingsAttribute, "mojmap") }
