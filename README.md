@@ -18,7 +18,7 @@ Any other mods which integrate with Sodium's GUI will *likely work* as well. If 
 - `Tab` / `Shift+Tab`: Move focus between controls and action buttons.
 - Arrow keys: Navigate through option rows and category tabs when those widgets are focused.
 - `Enter` or `Space`: Activate the focused control, including the `Reset` button.
-- `Esc`: Return to the previous screen.
+- `Esc`: Show a save warning if there are unsaved changes. Press `Esc` again to discard changes and exit.
 
 ### Screenshots
 ![General Tab](https://cdn.modrinth.com/data/fGB38jk4/images/f29afb5dd207d066256b251dd601585517193725.png)
