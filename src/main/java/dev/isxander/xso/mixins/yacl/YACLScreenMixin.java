@@ -2,11 +2,13 @@ package dev.isxander.xso.mixins.yacl;
 
 import dev.isxander.xso.utils.XsoDonationButton;
 import dev.isxander.xso.utils.XsoDonationScope;
+import dev.isxander.xso.utils.XsoTabNavigationScope;
 import dev.isxander.yacl3.gui.YACLScreen;
 import java.util.List;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.TabButton;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.components.tabs.TabManager;
 import net.minecraft.client.gui.screens.Screen;
@@ -23,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = YACLScreen.class)
-public abstract class YACLScreenMixin extends Screen implements XsoDonationScope {
+public abstract class YACLScreenMixin extends Screen implements XsoDonationScope, XsoTabNavigationScope {
     @Final
     @Shadow
     public TabManager tabManager;
@@ -37,6 +39,10 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
     private boolean xso$donationScoped;
     @Unique
     private int xso$discardEscGraceTicks;
+    @Unique
+    private boolean xso$handlingTabChanged;
+    @Unique
+    private boolean xso$pendingTabHighlightSync;
 
     protected YACLScreenMixin(Component title) {
         super(title);
@@ -104,6 +110,15 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         this.xso$donationButton.active = isFirstTab;
     }
 
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void xso$syncSelectedTabHighlight(CallbackInfo ci) {
+        if (!this.xso$pendingTabHighlightSync) return;
+        if (this.tabNavigationBar == null) return;
+
+        this.xso$focusSelectedTabButton();
+        this.xso$pendingTabHighlightSync = false;
+    }
+
     @Override
     public boolean keyPressed(@NonNull KeyEvent keyEvent) {
         if (this.tabNavigationBar != null
@@ -152,6 +167,35 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         } else if (right > visibleRight) {
             this.tabNavigationBar.setScrollOffset(
                     this.tabNavigationBar.getScrollOffset() + (right - visibleRight));
+        }
+    }
+
+    @Unique
+    private void xso$focusSelectedTabButton() {
+        if (this.tabNavigationBar == null) return;
+
+        int selectedIndex = this.tabNavigationBar.getTabs().indexOf(this.tabManager.getCurrentTab());
+        if (selectedIndex < 0) return;
+
+        List<? extends GuiEventListener> children = this.tabNavigationBar.children();
+        if (selectedIndex >= children.size()) return;
+
+        for (int i = 0; i < children.size(); i++) {
+            children.get(i).setFocused(i == selectedIndex);
+        }
+        this.setFocused(this.tabNavigationBar);
+    }
+
+    @Override
+    public void xso$onTabChanged() {
+        if (this.xso$handlingTabChanged) return;
+
+        this.xso$handlingTabChanged = true;
+        try {
+            this.xso$ensureSelectedTabVisible();
+            this.xso$pendingTabHighlightSync = true;
+        } finally {
+            this.xso$handlingTabChanged = false;
         }
     }
 

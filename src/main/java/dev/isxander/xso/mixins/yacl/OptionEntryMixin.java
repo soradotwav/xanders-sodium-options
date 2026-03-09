@@ -8,7 +8,10 @@ import dev.isxander.yacl3.gui.OptionListWidget;
 import dev.isxander.yacl3.gui.TextScaledButtonWidget;
 import dev.isxander.yacl3.gui.utils.WidgetUtils;
 import java.util.List;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,6 +22,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = OptionListWidget.OptionEntry.class, remap = false)
 public class OptionEntryMixin {
+    @Unique
+    private static final GuiEventListener xso$NON_FOCUSABLE_SPACER = new GuiEventListener() {
+        @Override
+        public void setFocused(boolean focused) {}
+
+        @Override
+        public boolean isFocused() {
+            return false;
+        }
+
+        @Override
+        public ComponentPath nextFocusPath(@NonNull FocusNavigationEvent event) {
+            return null;
+        }
+    };
+
     @Shadow
     @Final
     public Option<?> option;
@@ -45,7 +64,7 @@ public class OptionEntryMixin {
     @Inject(method = "children", at = @At("HEAD"), cancellable = true)
     private void xso$skipSpacerFromTabFocus(CallbackInfoReturnable<List<? extends GuiEventListener>> cir) {
         if (xso$isEmptySpacerOption()) {
-            cir.setReturnValue(ImmutableList.of());
+            cir.setReturnValue(ImmutableList.of(xso$NON_FOCUSABLE_SPACER));
         }
     }
 

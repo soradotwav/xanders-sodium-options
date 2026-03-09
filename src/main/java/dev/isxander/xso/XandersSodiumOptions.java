@@ -19,6 +19,7 @@ import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
 import net.caffeinemc.mods.sodium.client.config.structure.Page;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
+import net.irisshaders.iris.Iris;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.AlertScreen;
@@ -34,11 +35,17 @@ import org.slf4j.LoggerFactory;
 public class XandersSodiumOptions {
     private static boolean errorOccurred = false;
     private static final String SODIUM_CONFIG_ID = "sodium";
+    private static final Identifier IMPROVED_TRANSPARENCY_OPTION_ID =
+            Identifier.fromNamespaceAndPath("sodium", "quality.graphics");
     public static final Logger LOGGER = LoggerFactory.getLogger("xanders-sodium-options");
+    @Nullable
+    private static dev.isxander.yacl3.api.Option<?> improvedTransparencyOption;
 
     public static Screen wrapSodiumScreen(
             VideoSettingsScreen videoSettingsScreen, List<ModOptions> modOptionsList, Screen prevScreen) {
         try {
+            improvedTransparencyOption = null;
+
             YetAnotherConfigLib.Builder builder =
                     YetAnotherConfigLib.createBuilder().title(Component.translatable("options.videoTitle"));
 
@@ -96,6 +103,10 @@ public class XandersSodiumOptions {
 
             for (ConfigCategory category : categories) {
                 builder.category(category);
+            }
+
+            if (Compat.IRIS.isLoaded) {
+                onIrisShaderTogglePending(Iris.getIrisConfig().areShadersEnabled());
             }
 
             builder.save(() -> {
@@ -367,6 +378,9 @@ public class XandersSodiumOptions {
             var id = ((SodiumOptionAccessor) entry.getValue()).getId();
             if (id != null) {
                 byId.put(id, entry);
+                if (IMPROVED_TRANSPARENCY_OPTION_ID.equals(id)) {
+                    improvedTransparencyOption = entry.getKey();
+                }
             }
         }
 
@@ -401,5 +415,11 @@ public class XandersSodiumOptions {
 
     public static boolean shouldConvertGui() {
         return XsoConfig.INSTANCE.instance().enabled && !errorOccurred;
+    }
+
+    public static void onIrisShaderTogglePending(boolean shadersEnabled) {
+        if (improvedTransparencyOption != null) {
+            improvedTransparencyOption.setAvailable(!shadersEnabled);
+        }
     }
 }

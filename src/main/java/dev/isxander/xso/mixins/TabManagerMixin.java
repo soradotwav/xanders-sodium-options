@@ -1,6 +1,8 @@
 package dev.isxander.xso.mixins;
 
+import dev.isxander.xso.utils.XsoTabNavigationScope;
 import dev.isxander.yacl3.gui.YACLScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.components.tabs.TabManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,6 +17,10 @@ public class TabManagerMixin {
     private void onTabChanged(Tab tab, boolean clickSound, CallbackInfo ci) {
         if (tab instanceof YACLScreen.CategoryTab categoryTab) {
             categoryTab.updateButtons();
+        }
+
+        if (Minecraft.getInstance().screen instanceof XsoTabNavigationScope scoped) {
+            scoped.xso$onTabChanged();
         }
     }
 }

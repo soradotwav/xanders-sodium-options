@@ -3,6 +3,7 @@ package dev.isxander.xso.compat;
 import dev.isxander.xso.XandersSodiumOptions;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.yacl3.api.*;
+import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.impl.controller.DropdownStringControllerBuilderImpl;
 import java.io.IOException;
@@ -27,19 +28,37 @@ import net.fabricmc.loader.api.FabricLoader;
 public class IrisCompat {
     private static boolean dirty = false;
 
+    private static Screen createWrappedReturnScreen(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
+        return new Screen(Component.empty()) {
+            @Override
+            protected void init() {
+                minecraft.setScreen(XandersSodiumOptions.wrapSodiumScreen(
+                        videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
+
+                minecraft.execute(() -> {
+                    if (minecraft.screen instanceof YACLScreen yaclScreen) {
+                        var tabs = yaclScreen.tabNavigationBar.getTabs();
+                        String irisTabTitle =
+                                Component.translatable("options.iris.shaderPackSelection.title").getString();
+                        for (int i = 0; i < tabs.size(); i++) {
+                            if (tabs.get(i).getTabTitle().getString().equals(irisTabTitle)) {
+                                yaclScreen.tabNavigationBar.selectTab(i, false);
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+        };
+    }
+
     public static ConfigCategory createShaderPacksCategory(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
         if (XsoConfig.INSTANCE.instance().externalMenus) {
             return PlaceholderCategory.createBuilder()
                     .name(Component.translatable("options.iris.shaderPackSelection.title"))
                     .screen((client, screen) -> {
                         try {
-                            return new ShaderPackScreen(new Screen(Component.empty()) {
-                                @Override
-                                protected void init() {
-                                    minecraft.setScreen(XandersSodiumOptions.wrapSodiumScreen(
-                                            videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
-                                }
-                            });
+                            return new ShaderPackScreen(createWrappedReturnScreen(prevScreen, videoSettingsScreen));
                         } catch (Exception e) {
                             XandersSodiumOptions.LOGGER.error("Failed to open Iris settings screen", e);
 
@@ -86,7 +105,9 @@ public class IrisCompat {
                 })
                 .addListener((option, event) -> {
                     if (event == OptionEventListener.Event.STATE_CHANGE) {
-                        shaderPackList.setAvailable(option.pendingValue());
+                        boolean shadersEnabled = option.pendingValue();
+                        shaderPackList.setAvailable(shadersEnabled);
+                        XandersSodiumOptions.onIrisShaderTogglePending(shadersEnabled);
                     }
                 })
                 .controller((opt) ->
@@ -101,7 +122,9 @@ public class IrisCompat {
                         .text(Component.literal("➔"))
                         .description(OptionDescription.of(
                                 Component.translatable("options.iris.openShaderPackScreen.description")))
-                        .action((screen, opt) -> Minecraft.getInstance().setScreen(new ShaderPackScreen(screen)))
+                        .action((screen, opt) -> Minecraft.getInstance()
+                                .setScreen(new ShaderPackScreen(
+                                        createWrappedReturnScreen(prevScreen, videoSettingsScreen))))
                         .build())
                 .option(ButtonOption.createBuilder()
                         .name(Component.translatable("options.iris.downloadShaders"))
