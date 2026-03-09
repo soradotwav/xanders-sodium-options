@@ -86,7 +86,9 @@ public class IrisCompat {
                 })
                 .addListener((option, event) -> {
                     if (event == OptionEventListener.Event.STATE_CHANGE) {
-                        shaderPackList.setAvailable(option.pendingValue());
+                        boolean shadersEnabled = option.pendingValue();
+                        shaderPackList.setAvailable(shadersEnabled);
+                        XandersSodiumOptions.onIrisShaderTogglePending(shadersEnabled);
                     }
                 })
                 .controller((opt) ->
