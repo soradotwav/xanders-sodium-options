@@ -20,15 +20,16 @@ import net.minecraft.util.Util;
 //? fabric {
 
 import net.fabricmc.loader.api.FabricLoader;
- 
+
 //?} elif neoforge {
 /*import net.neoforged.fml.loading.FMLPaths;
-*///?}
+ *///?}
 
 public class IrisCompat {
     private static boolean dirty = false;
 
-    private static Screen createWrappedReturnScreen(Screen prevScreen, VideoSettingsScreen videoSettingsScreen) {
+    private static Screen createWrappedReturnScreen(
+            Screen prevScreen, VideoSettingsScreen videoSettingsScreen, boolean returnToIrisTab) {
         return new Screen(Component.empty()) {
             @Override
             protected void init() {
@@ -38,13 +39,19 @@ public class IrisCompat {
                 minecraft.execute(() -> {
                     if (minecraft.screen instanceof YACLScreen yaclScreen) {
                         var tabs = yaclScreen.tabNavigationBar.getTabs();
-                        String irisTabTitle =
-                                Component.translatable("options.iris.shaderPackSelection.title").getString();
-                        for (int i = 0; i < tabs.size(); i++) {
-                            if (tabs.get(i).getTabTitle().getString().equals(irisTabTitle)) {
-                                yaclScreen.tabNavigationBar.selectTab(i, false);
-                                break;
+                        if (returnToIrisTab) {
+                            String irisTabTitle =
+                                    Component.translatable("options.iris.shaderPackSelection.title").getString();
+                            for (int i = 0; i < tabs.size(); i++) {
+                                if (tabs.get(i).getTabTitle().getString().equals(irisTabTitle)) {
+                                    yaclScreen.tabNavigationBar.selectTab(i, false);
+                                    return;
+                                }
                             }
+                        }
+
+                        if (!tabs.isEmpty()) {
+                            yaclScreen.tabNavigationBar.selectTab(0, false);
                         }
                     }
                 });
@@ -58,7 +65,8 @@ public class IrisCompat {
                     .name(Component.translatable("options.iris.shaderPackSelection.title"))
                     .screen((client, screen) -> {
                         try {
-                            return new ShaderPackScreen(createWrappedReturnScreen(prevScreen, videoSettingsScreen));
+                            return new ShaderPackScreen(
+                                    createWrappedReturnScreen(prevScreen, videoSettingsScreen, false));
                         } catch (Exception e) {
                             XandersSodiumOptions.LOGGER.error("Failed to open Iris settings screen", e);
 
@@ -124,7 +132,7 @@ public class IrisCompat {
                                 Component.translatable("options.iris.openShaderPackScreen.description")))
                         .action((screen, opt) -> Minecraft.getInstance()
                                 .setScreen(new ShaderPackScreen(
-                                        createWrappedReturnScreen(prevScreen, videoSettingsScreen))))
+                                        createWrappedReturnScreen(prevScreen, videoSettingsScreen, true))))
                         .build())
                 .option(ButtonOption.createBuilder()
                         .name(Component.translatable("options.iris.downloadShaders"))
@@ -150,12 +158,12 @@ public class IrisCompat {
                         .action((screen, opt) -> Util.getPlatform()
                                 .openPath(
                                         //? fabric {
-                                        
+
                                         FabricLoader.getInstance().getGameDir().resolve("shaderpacks/")))
-                                         
-                                        //?} elif neoforge {
-                                        /*FMLPaths.GAMEDIR.get().resolve("shaderpacks/")))
-                                        *///?}
+
+                        //?} elif neoforge {
+                        /*FMLPaths.GAMEDIR.get().resolve("shaderpacks/")))
+                         *///?}
                         .build())
                 .option(LabelOption.create(Component.translatable("options.iris.shaderPackOptions")))
                 .option(enableShaders)
