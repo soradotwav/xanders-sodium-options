@@ -110,7 +110,10 @@ tasks.processResources {
     val props = mapOf(
         "mod_version" to project.version,
         "target_minecraft" to project.property("mod.target"),
-        "target_sodium" to project.property("target.sodium")
+        "target_sodium" to project.property("target.sodium"),
+        "target_neoforge" to "[21.11,)",
+        "target_minecraft_range" to "[${project.property("mod.target")},)",
+        "target_yacl" to "[3.6.0,)"
     )
 
     inputs.properties(props)

@@ -16,14 +16,14 @@ config = "xanders-sodium-options.mixins.json"
 [[dependencies."xanders_sodium_options"]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.11,)"
+versionRange = "${target_neoforge}"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies."xanders_sodium_options"]]
 modId = "minecraft"
 type = "required"
-versionRange = "[${target_minecraft},)"
+versionRange = "${target_minecraft_range}"
 ordering = "NONE"
 side = "CLIENT"
 
@@ -37,6 +37,6 @@ side = "CLIENT"
 [[dependencies."xanders_sodium_options"]]
 modId = "yet_another_config_lib_v3"
 type = "required"
-versionRange = "[3.6.0,)"
+versionRange = "${target_yacl}"
 ordering = "AFTER"
 side = "CLIENT"

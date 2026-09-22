@@ -15,13 +15,11 @@ public enum Compat {
     MORE_CULLING("moreculling", "xso.category.moreculling"),
     IRIS("iris", "xso.category.iris"),
 
+    // LDL 4.9.1 uses a distinct NeoForge runtime ID; 4.10.0 unifies it with Fabric.
     LAMBDYNAMICLIGHTS(
-
-            //? fabric {
-            
+            //? if fabric || >=26.1 {
             "lambdynlights",
-            
-            //?} elif neoforge {
+            //?} else {
             /*"lambdynlights_runtime",
             *///?}
             "xso.category.lambdynlights"
