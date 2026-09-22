@@ -6,3 +6,4 @@ build
 .vscode/
 versions/*/bin
 .DS_Store
+docs

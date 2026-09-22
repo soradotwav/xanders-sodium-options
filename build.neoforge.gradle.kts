@@ -121,6 +121,7 @@ tasks.processResources {
 }
 
 java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
     val version = JavaVersion.VERSION_21
     sourceCompatibility = version
     targetCompatibility = version

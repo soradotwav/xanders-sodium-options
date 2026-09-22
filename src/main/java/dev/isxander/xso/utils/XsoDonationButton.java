@@ -1,7 +1,11 @@
 package dev.isxander.xso.utils;
 
 import net.minecraft.client.Minecraft;
+//? if >=26.1 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
@@ -31,8 +35,13 @@ public class XsoDonationButton extends Button {
     }
 
     @Override
+    //? if >=26.1 {
+    /*protected void extractContents(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
+        this.extractDefaultSprite(context);
+    *///?} else {
     protected void renderContents(@NotNull GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
         this.renderDefaultSprite(context);
+    //?}
         context.blitSprite(
                 RenderPipelines.GUI_TEXTURED,
                 KOFI_ICON_ID,

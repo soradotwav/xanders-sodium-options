@@ -1,3 +1,4 @@
+//? if <26.1 {
 package dev.isxander.xso.mixins.yacl;
 
 import dev.isxander.yacl3.gui.TextScaledButtonWidget;
@@ -9,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-// Temporary scaling fix for the reset button pending YACL fix merge
+// Keep for YACL 3.8.2 on 1.21.11. YACL 3.9.7 on 26.1 uses TooltipButtonWidget instead.
 @Mixin(value = TextScaledButtonWidget.class, remap = false)
 public abstract class TextScaledButtonWidgetMixin extends Button.Plain {
 
@@ -59,3 +60,4 @@ public abstract class TextScaledButtonWidgetMixin extends Button.Plain {
         context.pose().popMatrix();
     }
 }
+//?}
