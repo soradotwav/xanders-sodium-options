@@ -85,7 +85,7 @@ tasks.processResources {
         "target_minecraft" to project.property("mod.target"),
         "target_sodium" to project.property("target.sodium"),
         "target_neoforge" to "[${project.property("deps.neoforge")},)",
-        "target_minecraft_range" to "[${project.property("mod.target")}]",
+        "target_minecraft_range" to project.property("mod.target.range"),
         "target_yacl" to "[3.9.7,)",
         "target_java" to 25
     )
