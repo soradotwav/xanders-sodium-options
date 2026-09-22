@@ -10,6 +10,9 @@ description = "Replaces the Sodium options GUI with vanilla-style alternatives."
 authors = "isXander, IMB11, soradotwav"
 logoFile = "icon.png"
 
+[features.xanders_sodium_options]
+javaVersion = "[${target_java},)"
+
 [[mixins]]
 config = "xanders-sodium-options.mixins.json"
 

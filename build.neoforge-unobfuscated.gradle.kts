@@ -86,7 +86,8 @@ tasks.processResources {
         "target_sodium" to project.property("target.sodium"),
         "target_neoforge" to "[${project.property("deps.neoforge")},)",
         "target_minecraft_range" to "[${project.property("mod.target")}]",
-        "target_yacl" to "[3.9.7,)"
+        "target_yacl" to "[3.9.7,)",
+        "target_java" to 25
     )
     inputs.properties(props)
     inputs.property("mixin_compatibility", "JAVA_25")
