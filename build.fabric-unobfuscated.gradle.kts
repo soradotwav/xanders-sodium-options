@@ -84,10 +84,16 @@ dependencies {
 tasks.processResources {
     exclude("META-INF/neoforge.mods.toml")
 
+    val fixMacTabScroll = sc.current.version == "26.3"
+    inputs.property("fix_mac_tab_scroll", fixMacTabScroll)
+
     // YACL 3.9 uses TooltipButtonWidget for reset controls; the old scaling patch is obsolete.
     filesMatching("xanders-sodium-options.mixins.json") {
         filter { line ->
-            line.replace("    \"yacl.TextScaledButtonWidgetMixin\",", "")
+            val withScrollMixin = if (fixMacTabScroll) {
+                line.replace("\"yacl.YACLScreenMixin\",", "\"yacl.YACLScreenMixin\", \"yacl.ScrollableNavigationBarMixin\",")
+            } else line
+            withScrollMixin.replace("    \"yacl.TextScaledButtonWidgetMixin\",", "")
                 .replace("JAVA_21", "JAVA_25")
         }
     }

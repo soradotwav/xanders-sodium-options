@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
-/** Screen ownership moved from Minecraft to Gui in 26.2. */
+/** Adapts screen navigation and platform link opening across Minecraft versions. */
 public final class ScreenCompat {
     private ScreenCompat() {
     }
@@ -22,6 +22,21 @@ public final class ScreenCompat {
         /*client.gui.setScreen(screen);
         *///?} else {
         client.setScreen(screen);
+        //?}
+    }
+    public static void openUri(String uri) {
+        //? if >=26.3 {
+        /*com.mojang.blaze3d.Blaze3D.openUri(java.net.URI.create(uri));
+        *///?} else {
+        net.minecraft.util.Util.getPlatform().openUri(uri);
+        //?}
+    }
+
+    public static void openPath(java.nio.file.Path path) {
+        //? if >=26.3 {
+        /*com.mojang.blaze3d.Blaze3D.openPath(path);
+        *///?} else {
+        net.minecraft.util.Util.getPlatform().openPath(path);
         //?}
     }
 }

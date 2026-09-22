@@ -15,7 +15,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -132,7 +132,7 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         }
 
         if (this.xso$donationScoped
-                && keyEvent.key() == GLFW.GLFW_KEY_ESCAPE
+                && keyEvent.key() == InputConstants.KEY_ESCAPE
                 && ((YACLScreen) (Object) this).pendingChanges()) {
             if (this.xso$discardEscGraceTicks > 0) {
                 ((YACLScreen) (Object) this).cancelOrReset();
@@ -212,5 +212,9 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
     @Override
     public void xso$setDonationScoped(boolean scoped) {
         this.xso$donationScoped = scoped;
+    }
+    @Override
+    public boolean xso$isDonationScoped() {
+        return this.xso$donationScoped;
     }
 }

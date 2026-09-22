@@ -13,7 +13,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 public class XsoDonationButton extends Button {
@@ -62,13 +61,17 @@ public class XsoDonationButton extends Button {
                 new ConfirmLinkScreen(
                         confirmed -> {
                             if (confirmed) {
-                                Util.getPlatform().openUri(KO_FI_URL);
+                                ScreenCompat.openUri(KO_FI_URL);
                             }
                             ScreenCompat.setScreen(Minecraft.getInstance(), screen);
                         },
                         title,
                         message,
+                        //? if >=26.3 {
+                        /*java.net.URI.create(KO_FI_URL),
+                        *///?} else {
                         KO_FI_URL,
+                        //?}
                         CommonComponents.GUI_CANCEL,
                         true));
     }

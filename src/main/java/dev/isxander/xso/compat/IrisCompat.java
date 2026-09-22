@@ -16,7 +16,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Util;
 
 //? fabric {
 
@@ -148,11 +147,15 @@ public class IrisCompat {
                                 new ConfirmLinkScreen(
                                         (bl) -> {
                                             if (bl) {
-                                                Util.getPlatform().openUri("https://modrinth.com/shaders");
+                                                ScreenCompat.openUri("https://modrinth.com/shaders");
                                             }
                                             ScreenCompat.setScreen(Minecraft.getInstance(), screen);
                                         },
+                                        //? if >=26.3 {
+                                        /*java.net.URI.create("https://modrinth.com/shaders"),
+                                        *///?} else {
                                         "https://modrinth.com/shaders",
+                                        //?}
                                         true)))
                         .build())
                 .option(ButtonOption.createBuilder()
@@ -160,11 +163,10 @@ public class IrisCompat {
                         .text(Component.literal("➔"))
                         .description(OptionDescription.of(
                                 Component.translatable("options.iris.openShaderPacksFolder.description")))
-                        .action((screen, opt) -> Util.getPlatform()
-                                .openPath(
-                                        //? fabric {
+                        .action((screen, opt) -> ScreenCompat.openPath(
+                                //? fabric {
 
-                                        FabricLoader.getInstance().getGameDir().resolve("shaderpacks/")))
+                                FabricLoader.getInstance().getGameDir().resolve("shaderpacks/")))
 
                         //?} elif neoforge {
                         /*FMLPaths.GAMEDIR.get().resolve("shaderpacks/")))
