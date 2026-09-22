@@ -37,6 +37,8 @@ repositories {
     }
 }
 
+val withCompatMods = providers.gradleProperty("xso.compatRuntime").map { it.toBoolean() }.getOrElse(false)
+
 dependencies {
     // Unobfuscated Minecraft uses ordinary dependency configurations.
     minecraft("com.mojang:minecraft:${sc.current.version}")
@@ -53,32 +55,31 @@ dependencies {
     implementation("maven.modrinth:sodium:${property("deps.sodium")}")
     // ModMenu entrypoint and development menu.
     compileOnly("com.terraformersmc:modmenu:${property("deps.modmenu")}")
-    runtimeOnly("com.terraformersmc:modmenu:${property("deps.modmenu")}")
-
-    // Optional Compat: Sodium Extra
-    compileOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
-    runtimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
 
     // Optional Compat: More Culling
     compileOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
-    runtimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
 
     // Optional Compat: Iris
     compileOnly("maven.modrinth:iris:${property("deps.iris")}")
-    runtimeOnly("maven.modrinth:iris:${property("deps.iris")}")
 
     // FancyMenu has no 26.1 release; its @Pseudo mixin does not need a compile dependency.
 
     // Optional Compat: LambDynamicLights
     compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
-    runtimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
 
     // Optional Compat: SpruceUI (Required by LDL)
     compileOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}")
-    runtimeOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}")
 
-    runtimeOnly("maven.modrinth:cloth-config:${property("runtime.cloth")}")
-
+    // Optional mods and their libraries are only needed for integration testing.
+    if (withCompatMods) {
+        runtimeOnly("com.terraformersmc:modmenu:${property("deps.modmenu")}")
+        runtimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
+        runtimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
+        runtimeOnly("maven.modrinth:iris:${property("deps.iris")}")
+        runtimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
+        runtimeOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}")
+        runtimeOnly("maven.modrinth:cloth-config:${property("runtime.cloth")}")
+    }
 }
 
 tasks.processResources {

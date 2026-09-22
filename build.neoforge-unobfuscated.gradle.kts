@@ -50,7 +50,7 @@ neoForge {
     }
 }
 
-val withCompatMods = providers.gradleProperty("xso.compatRuntime").map { it.toBoolean() }.getOrElse(true)
+val withCompatMods = providers.gradleProperty("xso.compatRuntime").map { it.toBoolean() }.getOrElse(false)
 
 dependencies {
     implementation("dev.isxander:yet-another-config-lib:${property("deps.yacl")}")
@@ -58,14 +58,13 @@ dependencies {
     implementation("net.caffeinemc:sodium-neoforge-mod:${property("deps.sodium")}")
     runtimeOnly("net.caffeinemc:sodium-neoforge:${property("deps.sodium")}")
 
-    compileOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
     compileOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
     compileOnly("maven.modrinth:iris:${property("deps.iris")}")
 
     // Universal jars include NeoForge metadata. Avoid their Fabric-specific runtime variants.
     compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
     compileOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}")
-    // Use -Pxso.compatRuntime=false to test with only required dependencies.
+    // Optional mods and their libraries are only needed for integration testing.
     if (withCompatMods) {
         runtimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
         runtimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")

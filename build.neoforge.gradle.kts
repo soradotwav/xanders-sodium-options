@@ -47,6 +47,8 @@ neoForge {
     }
 }
 
+val withCompatMods = providers.gradleProperty("xso.compatRuntime").map { it.toBoolean() }.getOrElse(false)
+
 dependencies {
     attributesSchema {
         attribute(mappingsAttribute)
@@ -60,26 +62,14 @@ dependencies {
     implementation("net.caffeinemc:sodium-neoforge-mod:${property("deps.sodium")}")
     runtimeOnly("net.caffeinemc:sodium-neoforge:${property("deps.sodium")}")
 
-    // Optional Compat: Sodium Extra
-    compileOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
-    runtimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
-
     // Optional Compat: More Culling
     compileOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
-    runtimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
 
     // Optional Compat: Iris
     compileOnly("maven.modrinth:iris:${property("deps.iris")}")
-    //runtimeOnly("maven.modrinth:iris:${property("deps.iris")}")
-
-    // Optional Compat: FancyMenu
-    compileOnly("maven.modrinth:fancymenu:${property("deps.fancymenu")}")
 
     // Optional Compat: LambDynamicLights
     compileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
-        attributes { attribute(mappingsAttribute, "mojmap") }
-    }
-    runtimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
         attributes { attribute(mappingsAttribute, "mojmap") }
     }
 
@@ -87,21 +77,19 @@ dependencies {
     compileOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}") {
         attributes { attribute(mappingsAttribute, "mojmap") }
     }
-    runtimeOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}") {
-        attributes { attribute(mappingsAttribute, "mojmap") }
-    }
 
-    // Internal libraries (YACL/MixinSquared)
-    jarJar("dev.yumi.mc.core:yumi-mc-foundation:1.0.0-alpha.15+1.21.1") {
-        attributes {
-            attribute(mappingsAttribute, "mojmap")
+    // Optional mods and their libraries are only needed for integration testing.
+    if (withCompatMods) {
+        runtimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
+        runtimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
+        runtimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}") {
+            attributes { attribute(mappingsAttribute, "mojmap") }
         }
+        runtimeOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}") {
+            attributes { attribute(mappingsAttribute, "mojmap") }
+        }
+        runtimeOnly("maven.modrinth:cloth-config:${property("runtime.cloth")}")
     }
-
-    runtimeOnly("maven.modrinth:cloth-config:${property("runtime.cloth")}")
-
-    implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-neoforge:0.2.0")!!)
-    jarJar("com.github.bawnorton.mixinsquared:mixinsquared-neoforge:0.2.0")
 }
 
 tasks.processResources {

@@ -1,13 +1,14 @@
 package dev.isxander.xso.mixins.compat;
 
 import dev.lambdaurora.lambdynlights.ChunkRebuildSchedulerMode;
-import dev.lambdaurora.lambdynlights.DynamicLightsConfig;
 import dev.lambdaurora.lambdynlights.DynamicLightsMode;
 import dev.lambdaurora.lambdynlights.ExplosiveLightingMode;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(DynamicLightsConfig.class)
+@Pseudo
+@Mixin(targets = "dev.lambdaurora.lambdynlights.DynamicLightsConfig", remap = false)
 public interface DynamicLightsConfigAccessor {
     @Accessor("DEFAULT_DYNAMIC_LIGHTS_MODE")
     static DynamicLightsMode getDefaultDynamicLightsMode() {
