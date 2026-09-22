@@ -2,7 +2,16 @@
 
 **A community continuation of Xander's Sodium Options**, replacing the Sodium options GUI with a Vanilla-style alternative powered by [YetAnotherConfigLib](https://modrinth.com/mod/yacl).
 
-> Originally created by [isXander](https://github.com/isXander). This version supports Minecraft 1.21.6+. Looking for older versions? Check the [original mod page](https://modrinth.com/mod/xanders-sodium-options).
+> Originally created by [isXander](https://github.com/isXander). Looking for older versions? Check the [original mod page](https://modrinth.com/mod/xanders-sodium-options).
+
+### Supported Versions
+
+![Fabric: 1.21.6–26.3](https://img.shields.io/badge/Fabric-1.21.6%E2%80%9326.3-DBB78A)
+![NeoForge: 1.21.11–26.2](https://img.shields.io/badge/NeoForge-1.21.11%E2%80%9326.2-F99A36)
+
+Requires Sodium and the matching Minecraft/loader build. Use Java 21 for 1.21.x and Java 25 for 26.x.
+
+### Mod Integrations
 
 It has a wide range of support for various mods which integrate with Sodium, such as:
 -   [Iris](https://modrinth.com/mod/iris)
