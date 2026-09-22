@@ -41,6 +41,8 @@ jobs:
           :1.21.11-neoforge:buildAndCollect
           :26.1-fabric:buildAndCollect
           :26.1-neoforge:buildAndCollect
+          :26.2-fabric:buildAndCollect
+          :26.2-neoforge:buildAndCollect
 
       - name: Upload JARs for manual distribution
         uses: actions/upload-artifact@v4

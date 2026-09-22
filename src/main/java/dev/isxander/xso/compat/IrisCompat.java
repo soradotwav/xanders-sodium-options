@@ -2,6 +2,7 @@ package dev.isxander.xso.compat;
 
 import dev.isxander.xso.XandersSodiumOptions;
 import dev.isxander.xso.config.XsoConfig;
+import dev.isxander.xso.utils.ScreenCompat;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
@@ -33,15 +34,17 @@ public class IrisCompat {
         return new Screen(Component.empty()) {
             @Override
             protected void init() {
-                minecraft.setScreen(XandersSodiumOptions.wrapSodiumScreen(
-                        videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
+                ScreenCompat.setScreen(
+                        minecraft,
+                        XandersSodiumOptions.wrapSodiumScreen(
+                                videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
 
                 minecraft.execute(() -> {
-                    if (minecraft.screen instanceof YACLScreen yaclScreen) {
+                    if (ScreenCompat.getScreen(minecraft) instanceof YACLScreen yaclScreen) {
                         var tabs = yaclScreen.tabNavigationBar.getTabs();
                         if (returnToIrisTab) {
-                            String irisTabTitle =
-                                    Component.translatable("options.iris.shaderPackSelection.title").getString();
+                            String irisTabTitle = Component.translatable("options.iris.shaderPackSelection.title")
+                                    .getString();
                             for (int i = 0; i < tabs.size(); i++) {
                                 if (tabs.get(i).getTabTitle().getString().equals(irisTabTitle)) {
                                     yaclScreen.tabNavigationBar.selectTab(i, false);
@@ -71,7 +74,7 @@ public class IrisCompat {
                             XandersSodiumOptions.LOGGER.error("Failed to open Iris settings screen", e);
 
                             return new net.minecraft.client.gui.screens.AlertScreen(
-                                    () -> client.setScreen(null),
+                                    () -> ScreenCompat.setScreen(client, null),
                                     Component.literal("Iris Integration Error"),
                                     Component.literal("Xander's Sodium Options failed to open Iris settings screen.\n\n"
                                             + e.getMessage()));
@@ -88,7 +91,8 @@ public class IrisCompat {
                         Iris.getIrisConfig().getShaderPackName().orElse(""),
                         () -> Iris.getIrisConfig().getShaderPackName().orElse(""),
                         (val) -> {
-                            if (val.isEmpty()) val = null;
+                            if (val.isEmpty())
+                                val = null;
                             Iris.getIrisConfig().setShaderPackName(val);
                             dirty = true;
                         })
@@ -118,8 +122,7 @@ public class IrisCompat {
                         XandersSodiumOptions.onIrisShaderTogglePending(shadersEnabled);
                     }
                 })
-                .controller((opt) ->
-                        BooleanControllerBuilder.create(opt).coloured(true).trueFalseFormatter())
+                .controller((opt) -> BooleanControllerBuilder.create(opt).coloured(true).trueFalseFormatter())
                 .build();
 
         return ConfigCategory.createBuilder()
@@ -130,8 +133,9 @@ public class IrisCompat {
                         .text(Component.literal("➔"))
                         .description(OptionDescription.of(
                                 Component.translatable("options.iris.openShaderPackScreen.description")))
-                        .action((screen, opt) -> Minecraft.getInstance()
-                                .setScreen(new ShaderPackScreen(
+                        .action((screen, opt) -> ScreenCompat.setScreen(
+                                Minecraft.getInstance(),
+                                new ShaderPackScreen(
                                         createWrappedReturnScreen(prevScreen, videoSettingsScreen, true))))
                         .build())
                 .option(ButtonOption.createBuilder()
@@ -139,13 +143,14 @@ public class IrisCompat {
                         .text(Component.literal("➔"))
                         .description(OptionDescription.of(
                                 Component.translatable("options.iris.downloadShaders.description")))
-                        .action((screen, opt) -> Minecraft.getInstance()
-                                .setScreen(new ConfirmLinkScreen(
+                        .action((screen, opt) -> ScreenCompat.setScreen(
+                                Minecraft.getInstance(),
+                                new ConfirmLinkScreen(
                                         (bl) -> {
                                             if (bl) {
                                                 Util.getPlatform().openUri("https://modrinth.com/shaders");
                                             }
-                                            Minecraft.getInstance().setScreen(screen);
+                                            ScreenCompat.setScreen(Minecraft.getInstance(), screen);
                                         },
                                         "https://modrinth.com/shaders",
                                         true)))

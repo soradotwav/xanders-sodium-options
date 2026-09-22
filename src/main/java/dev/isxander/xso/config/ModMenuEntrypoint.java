@@ -18,5 +18,5 @@ public class ModMenuEntrypoint implements ModMenuApi {
                 .generateScreen(parent);
     }
 }
- 
+
 //?}

@@ -12,7 +12,7 @@ public class ModEntrypoint implements ClientModInitializer {
         XsoConfig.load();
     }
 }
- 
+
 //?} elif neoforge {
 /*import net.neoforged.fml.common.Mod;
 

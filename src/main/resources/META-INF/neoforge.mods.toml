@@ -8,7 +8,7 @@ version = "${mod_version}"
 displayName = "Xander's Sodium Options: Continued"
 description = "Replaces the Sodium options GUI with vanilla-style alternatives."
 authors = "isXander, IMB11, soradotwav"
-logoFile = "icon.png"
+${target_icon_key} = "icon.png"
 
 [features.xanders_sodium_options]
 javaVersion = "[${target_java},)"

@@ -40,7 +40,7 @@ neoForge {
     runs {
         register("client") {
             client()
-            gameDirectory = rootProject.file("run/26.1-neoforge")
+            gameDirectory = rootProject.file("run/${sc.current.version}-neoforge")
         }
     }
     mods {
@@ -87,6 +87,7 @@ tasks.processResources {
         "target_neoforge" to "[${project.property("deps.neoforge")},)",
         "target_minecraft_range" to project.property("mod.target.range"),
         "target_yacl" to "[3.9.7,)",
+        "target_icon_key" to (project.findProperty("mod.icon_key") ?: "logoFile"),
         "target_java" to 25
     )
     inputs.properties(props)

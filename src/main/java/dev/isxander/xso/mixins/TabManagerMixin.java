@@ -1,5 +1,6 @@
 package dev.isxander.xso.mixins;
 
+import dev.isxander.xso.utils.ScreenCompat;
 import dev.isxander.xso.utils.XsoTabNavigationScope;
 import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraft.client.Minecraft;
@@ -19,7 +20,7 @@ public class TabManagerMixin {
             categoryTab.updateButtons();
         }
 
-        if (Minecraft.getInstance().screen instanceof XsoTabNavigationScope scoped) {
+        if (ScreenCompat.getScreen(Minecraft.getInstance()) instanceof XsoTabNavigationScope scoped) {
             scoped.xso$onTabChanged();
         }
     }

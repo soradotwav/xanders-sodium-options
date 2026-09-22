@@ -30,7 +30,8 @@ public class OptionEntryMixin {
     @Unique
     private static final GuiEventListener xso$NON_FOCUSABLE_SPACER = new GuiEventListener() {
         @Override
-        public void setFocused(boolean focused) {}
+        public void setFocused(boolean focused) {
+        }
 
         @Override
         public boolean isFocused() {
@@ -71,7 +72,7 @@ public class OptionEntryMixin {
         if (this.resetButton != null
                 && this.resetButton.isFocused()
                 && WidgetUtils.keyPressed(this.resetButton, keyCode, scanCode, modifiers)) {
-    //?}
+            //?}
             ((OptionListWidget.OptionEntry) (Object) this).setFocused(this.widget);
             cir.setReturnValue(true);
         }

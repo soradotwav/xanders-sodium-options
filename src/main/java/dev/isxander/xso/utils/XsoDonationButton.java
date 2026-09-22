@@ -17,8 +17,8 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 public class XsoDonationButton extends Button {
-    public static final Identifier KOFI_ICON_ID =
-            Identifier.fromNamespaceAndPath("xanders-sodium-options", "kofi-icon");
+    public static final Identifier KOFI_ICON_ID = Identifier.fromNamespaceAndPath("xanders-sodium-options",
+            "kofi-icon");
     private static final int ICON_SIZE = 12;
     private static final String KO_FI_URL = "https://ko-fi.com/jellysquid_";
 
@@ -29,7 +29,7 @@ public class XsoDonationButton extends Button {
                 width,
                 height,
                 net.minecraft.network.chat.Component.empty(),
-                button -> openDonationLink(Minecraft.getInstance().screen),
+                button -> openDonationLink(ScreenCompat.getScreen(Minecraft.getInstance())),
                 Button.DEFAULT_NARRATION);
         this.setTooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("xso.donation.tooltip")));
     }
@@ -41,7 +41,7 @@ public class XsoDonationButton extends Button {
     *///?} else {
     protected void renderContents(@NotNull GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
         this.renderDefaultSprite(context);
-    //?}
+        //?}
         context.blitSprite(
                 RenderPipelines.GUI_TEXTURED,
                 KOFI_ICON_ID,
@@ -52,18 +52,19 @@ public class XsoDonationButton extends Button {
     }
 
     public static void openDonationLink(Screen screen) {
-        net.minecraft.network.chat.Component title =
-                net.minecraft.network.chat.Component.translatable("xso.donation.confirm.title");
-        net.minecraft.network.chat.Component message =
-                net.minecraft.network.chat.Component.translatable("xso.donation.confirm.message");
+        net.minecraft.network.chat.Component title = net.minecraft.network.chat.Component
+                .translatable("xso.donation.confirm.title");
+        net.minecraft.network.chat.Component message = net.minecraft.network.chat.Component
+                .translatable("xso.donation.confirm.message");
 
-        Minecraft.getInstance()
-                .setScreen(new ConfirmLinkScreen(
+        ScreenCompat.setScreen(
+                Minecraft.getInstance(),
+                new ConfirmLinkScreen(
                         confirmed -> {
                             if (confirmed) {
                                 Util.getPlatform().openUri(KO_FI_URL);
                             }
-                            Minecraft.getInstance().setScreen(screen);
+                            ScreenCompat.setScreen(Minecraft.getInstance(), screen);
                         },
                         title,
                         message,

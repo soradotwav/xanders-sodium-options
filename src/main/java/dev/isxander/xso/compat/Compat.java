@@ -5,28 +5,24 @@ import dev.isxander.xso.utils.CategoryDescriptions;
 //? fabric {
 
 import net.fabricmc.loader.api.FabricLoader;
- 
+
 //?} elif neoforge {
 /*import net.neoforged.fml.ModList;
 *///?}
 
 public enum Compat {
-    SODIUM_EXTRA("sodium-extra", "xso.category.sodium_extra"),
-    MORE_CULLING("moreculling", "xso.category.moreculling"),
-    IRIS("iris", "xso.category.iris"),
+    SODIUM_EXTRA("sodium-extra", "xso.category.sodium_extra"), MORE_CULLING("moreculling",
+            "xso.category.moreculling"), IRIS("iris", "xso.category.iris"),
 
     // LDL 4.9.1 uses a distinct NeoForge runtime ID; 4.10.0 unifies it with Fabric.
-    LAMBDYNAMICLIGHTS(
-            //? if fabric || >=26.1 {
-            "lambdynlights",
-            //?} else {
+    LAMBDYNAMICLIGHTS(//? if fabric || >=26.1 {
+            "lambdynlights", //?} else {
             /*"lambdynlights_runtime",
             *///?}
-            "xso.category.lambdynlights"
-    ),
+            "xso.category.lambdynlights"),
 
-    XSO("xanders_sodium_options", "xso.category.xso"),
-    ENTITY_VIEW_DISTANCE("entity-view-distance", "xso.category.entity_view_distance");
+    XSO("xanders_sodium_options", "xso.category.xso"), ENTITY_VIEW_DISTANCE("entity-view-distance",
+            "xso.category.entity_view_distance");
 
     public final String modId;
     public final String descriptionKey;
@@ -44,12 +40,11 @@ public enum Compat {
 
     private static boolean mod(String id) {
         //? fabric {
-        
+
         return FabricLoader.getInstance().isModLoaded(id);
-         
+
         //?} elif neoforge {
         /*return ModList.get().isLoaded(id);
         *///?}
     }
 }
-

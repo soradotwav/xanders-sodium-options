@@ -132,6 +132,6 @@ tasks.register<Copy>("buildAndCollect") {
 loom {
     runConfigs.all {
         ideConfigGenerated(true)
-        runDir = "../../run/26.1-fabric"
+        runDir = "../../run/${sc.current.version}-fabric"
     }
 }

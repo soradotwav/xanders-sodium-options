@@ -114,6 +114,7 @@ tasks.processResources {
         "target_neoforge" to "[21.11,)",
         "target_minecraft_range" to "[${project.property("mod.target")}]",
         "target_yacl" to "[3.8.2,)",
+        "target_icon_key" to "logoFile",
         "target_java" to 21
     )
 

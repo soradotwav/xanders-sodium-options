@@ -63,7 +63,8 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         }
 
         if (searchField != null) {
-            if (this.xso$donationButton != null && this.children().contains(this.xso$donationButton)) return;
+            if (this.xso$donationButton != null && this.children().contains(this.xso$donationButton))
+                return;
 
             int buttonSize = 20;
             int spacing = 4;
@@ -112,8 +113,10 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void xso$syncSelectedTabHighlight(CallbackInfo ci) {
-        if (!this.xso$pendingTabHighlightSync) return;
-        if (this.tabNavigationBar == null) return;
+        if (!this.xso$pendingTabHighlightSync)
+            return;
+        if (this.tabNavigationBar == null)
+            return;
 
         this.xso$focusSelectedTabButton();
         this.xso$pendingTabHighlightSync = false;
@@ -150,12 +153,15 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         final int navMargin = 28;
 
         int selectedIndex = this.tabNavigationBar.getTabs().indexOf(this.tabManager.getCurrentTab());
-        if (selectedIndex < 0) return;
+        if (selectedIndex < 0)
+            return;
 
         var children = this.tabNavigationBar.children();
-        if (selectedIndex >= children.size()) return;
+        if (selectedIndex >= children.size())
+            return;
 
-        if (!(children.get(selectedIndex) instanceof TabButton tabButton)) return;
+        if (!(children.get(selectedIndex) instanceof TabButton tabButton))
+            return;
 
         int left = tabButton.getX();
         int right = left + tabButton.getWidth();
@@ -172,13 +178,16 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
 
     @Unique
     private void xso$focusSelectedTabButton() {
-        if (this.tabNavigationBar == null) return;
+        if (this.tabNavigationBar == null)
+            return;
 
         int selectedIndex = this.tabNavigationBar.getTabs().indexOf(this.tabManager.getCurrentTab());
-        if (selectedIndex < 0) return;
+        if (selectedIndex < 0)
+            return;
 
         List<? extends GuiEventListener> children = this.tabNavigationBar.children();
-        if (selectedIndex >= children.size()) return;
+        if (selectedIndex >= children.size())
+            return;
 
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFocused(i == selectedIndex);
@@ -188,7 +197,8 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
 
     @Override
     public void xso$onTabChanged() {
-        if (this.xso$handlingTabChanged) return;
+        if (this.xso$handlingTabChanged)
+            return;
 
         this.xso$handlingTabChanged = true;
         try {

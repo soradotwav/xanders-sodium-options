@@ -14,23 +14,3 @@ stonecutter parameters {
     constants["neoforge"] = loader == "neoforge"
     swaps["mod_version"] = "\"${property("mod.version")}\";"
 }
-
-subprojects {
-    apply(plugin = "com.diffplug.spotless")
-
-    repositories {
-        mavenCentral()
-    }
-
-    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-        java {
-            target(fileTree("src") {
-                include("**/*.java")
-            })
-            palantirJavaFormat()
-            removeUnusedImports()
-            trimTrailingWhitespace()
-            endWithNewline()
-        }
-    }
-}
