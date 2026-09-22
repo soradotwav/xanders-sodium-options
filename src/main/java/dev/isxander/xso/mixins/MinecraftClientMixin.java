@@ -8,7 +8,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
+//? if >=26.2 {
+/*@Mixin(net.minecraft.client.gui.Gui.class)
+*///?} else {
 @Mixin(Minecraft.class)
+//?}
 public class MinecraftClientMixin {
     @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
     private Screen modifyScreen(Screen screen) {

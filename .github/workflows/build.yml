@@ -1,0 +1,55 @@
+name: Build JARs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 and 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          # The last version runs Gradle; Java 21 remains available as a toolchain.
+          java-version: |
+            21
+            25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Check and build all targets
+        run: >-
+          ./gradlew --no-daemon --console=plain
+          -Dorg.gradle.java.installations.fromEnv=JAVA_HOME_21_X64,JAVA_HOME_25_X64
+          spotlessCheck
+          :1.21.11-fabric:buildAndCollect
+          :1.21.11-neoforge:buildAndCollect
+          :26.1-fabric:buildAndCollect
+          :26.1-neoforge:buildAndCollect
+          :26.2-fabric:buildAndCollect
+          :26.2-neoforge:buildAndCollect
+          :26.3-fabric:buildAndCollect
+
+      - name: Upload JARs for manual distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: xanders-sodium-options-${{ github.sha }}
+          # Collection tasks select the distributable JAR, excluding dev/source JARs.
+          path: build/libs/**/*.jar
+          if-no-files-found: error
+          retention-days: 14

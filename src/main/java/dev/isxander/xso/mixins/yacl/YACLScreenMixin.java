@@ -15,7 +15,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -63,7 +63,8 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         }
 
         if (searchField != null) {
-            if (this.xso$donationButton != null && this.children().contains(this.xso$donationButton)) return;
+            if (this.xso$donationButton != null && this.children().contains(this.xso$donationButton))
+                return;
 
             int buttonSize = 20;
             int spacing = 4;
@@ -112,8 +113,10 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
 
     @Inject(method = "tick", at = @At("TAIL"))
     private void xso$syncSelectedTabHighlight(CallbackInfo ci) {
-        if (!this.xso$pendingTabHighlightSync) return;
-        if (this.tabNavigationBar == null) return;
+        if (!this.xso$pendingTabHighlightSync)
+            return;
+        if (this.tabNavigationBar == null)
+            return;
 
         this.xso$focusSelectedTabButton();
         this.xso$pendingTabHighlightSync = false;
@@ -129,7 +132,7 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         }
 
         if (this.xso$donationScoped
-                && keyEvent.key() == GLFW.GLFW_KEY_ESCAPE
+                && keyEvent.key() == InputConstants.KEY_ESCAPE
                 && ((YACLScreen) (Object) this).pendingChanges()) {
             if (this.xso$discardEscGraceTicks > 0) {
                 ((YACLScreen) (Object) this).cancelOrReset();
@@ -150,12 +153,15 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
         final int navMargin = 28;
 
         int selectedIndex = this.tabNavigationBar.getTabs().indexOf(this.tabManager.getCurrentTab());
-        if (selectedIndex < 0) return;
+        if (selectedIndex < 0)
+            return;
 
         var children = this.tabNavigationBar.children();
-        if (selectedIndex >= children.size()) return;
+        if (selectedIndex >= children.size())
+            return;
 
-        if (!(children.get(selectedIndex) instanceof TabButton tabButton)) return;
+        if (!(children.get(selectedIndex) instanceof TabButton tabButton))
+            return;
 
         int left = tabButton.getX();
         int right = left + tabButton.getWidth();
@@ -172,13 +178,16 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
 
     @Unique
     private void xso$focusSelectedTabButton() {
-        if (this.tabNavigationBar == null) return;
+        if (this.tabNavigationBar == null)
+            return;
 
         int selectedIndex = this.tabNavigationBar.getTabs().indexOf(this.tabManager.getCurrentTab());
-        if (selectedIndex < 0) return;
+        if (selectedIndex < 0)
+            return;
 
         List<? extends GuiEventListener> children = this.tabNavigationBar.children();
-        if (selectedIndex >= children.size()) return;
+        if (selectedIndex >= children.size())
+            return;
 
         for (int i = 0; i < children.size(); i++) {
             children.get(i).setFocused(i == selectedIndex);
@@ -188,7 +197,8 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
 
     @Override
     public void xso$onTabChanged() {
-        if (this.xso$handlingTabChanged) return;
+        if (this.xso$handlingTabChanged)
+            return;
 
         this.xso$handlingTabChanged = true;
         try {
@@ -202,5 +212,9 @@ public abstract class YACLScreenMixin extends Screen implements XsoDonationScope
     @Override
     public void xso$setDonationScoped(boolean scoped) {
         this.xso$donationScoped = scoped;
+    }
+    @Override
+    public boolean xso$isDonationScoped() {
+        return this.xso$donationScoped;
     }
 }

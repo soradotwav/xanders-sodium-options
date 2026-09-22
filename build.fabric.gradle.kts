@@ -89,7 +89,9 @@ tasks.processResources {
             "mod_version" to project.version,
             "target_minecraft" to project.property("mod.target"),
             "target_sodium" to project.property("target.sodium"),
-            "target_fabricloader" to project.property("deps.fabric_loader")
+            "target_fabricloader" to project.property("deps.fabric_loader"),
+            "target_java" to 21,
+            "target_yacl" to project.property("target.yacl")
     )
 
     inputs.properties(props)
@@ -100,6 +102,7 @@ tasks.processResources {
 }
 
 java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
     val version = JavaVersion.VERSION_21
     sourceCompatibility = version
     targetCompatibility = version

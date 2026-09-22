@@ -77,21 +77,20 @@ public class CategoryDescriptions {
             return DescriptionWithName.of(categoryName, OptionDescription.of(description));
         }
 
-
         //? fabric {
-        
+
         return FabricLoader.getInstance()
                 .getModContainer(modId)
-         
-        //?} elif neoforge {
-        /*return ModList.get().getModContainerById(modId)
-        *///?}
+
+                //?} elif neoforge {
+                /*return ModList.get().getModContainerById(modId)
+                *///?}
                 .map(container -> {
 
                     //? fabric {
-                    
+
                     String desc = container.getMetadata().getDescription();
-                     
+
                     //?} elif neoforge {
                     /*String desc = container.getModInfo().getDescription();
                     *///?}
@@ -107,12 +106,14 @@ public class CategoryDescriptions {
     }
 
     public static boolean isLabelOptionSpacer(DescriptionWithName desc) {
-        if (desc == null) return false;
+        if (desc == null)
+            return false;
         return LABEL_OPTION_NAME.equals(desc.name().getString());
     }
 
     public static boolean hasEmptyDescription(DescriptionWithName desc) {
-        if (desc == null) return false;
+        if (desc == null)
+            return false;
         return desc.description().text().getString().isBlank();
     }
 }

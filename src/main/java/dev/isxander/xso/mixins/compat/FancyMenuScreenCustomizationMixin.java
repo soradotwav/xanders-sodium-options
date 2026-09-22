@@ -1,5 +1,6 @@
 package dev.isxander.xso.mixins.compat;
 
+import dev.isxander.xso.utils.ScreenCompat;
 import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class FancyMenuScreenCustomizationMixin {
     @Inject(method = "reInitCurrentScreen(ZZ)V", at = @At("HEAD"), cancellable = true, require = 0)
     private static void xso$skipReInitForYaclScreen(boolean resetGuiScale, boolean restoreScreen, CallbackInfo ci) {
-        if (Minecraft.getInstance().screen instanceof YACLScreen) {
+        if (ScreenCompat.getScreen(Minecraft.getInstance()) instanceof YACLScreen) {
             ci.cancel();
         }
     }

@@ -28,10 +28,11 @@
     "xanders-sodium-options.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.16.9",
+    "fabricloader": ">=${target_fabricloader}",
+    "java": ">=${target_java}",
     "minecraft": "${target_minecraft}",
     "sodium": ">=${target_sodium}",
-    "yet_another_config_lib_v3": ">=3.6.0"
+    "yet_another_config_lib_v3": ">=${target_yacl}"
   },
   "breaks": {
     "reeses-sodium-options": "*",

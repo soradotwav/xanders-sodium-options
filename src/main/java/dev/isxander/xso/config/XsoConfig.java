@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
 //? fabric {
 
 import net.fabricmc.loader.api.FabricLoader;
- 
+
 //?} elif neoforge {
 /*import net.neoforged.fml.loading.FMLPaths;
 *///?}
@@ -26,9 +26,9 @@ public class XsoConfig {
             .id(Identifier.fromNamespaceAndPath("xso", "config"))
             .serializer(handler -> GsonConfigSerializerBuilder.create(handler)
                     //? fabric {
-                    
+
                     .setPath(FabricLoader.getInstance().getConfigDir().resolve("xanders-sodium-options.json"))
-                     
+
                     //?} elif neoforge {
                     /*.setPath(FMLPaths.CONFIGDIR.get().resolve("xanders-sodium-options.json"))
                     *///?}

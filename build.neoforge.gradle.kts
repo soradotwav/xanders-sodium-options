@@ -110,7 +110,12 @@ tasks.processResources {
     val props = mapOf(
         "mod_version" to project.version,
         "target_minecraft" to project.property("mod.target"),
-        "target_sodium" to project.property("target.sodium")
+        "target_sodium" to project.property("target.sodium"),
+        "target_neoforge" to "[21.11,)",
+        "target_minecraft_range" to "[${project.property("mod.target")}]",
+        "target_yacl" to "[3.8.2,)",
+        "target_icon_key" to "logoFile",
+        "target_java" to 21
     )
 
     inputs.properties(props)
@@ -121,6 +126,7 @@ tasks.processResources {
 }
 
 java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
     val version = JavaVersion.VERSION_21
     sourceCompatibility = version
     targetCompatibility = version

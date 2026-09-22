@@ -4,6 +4,7 @@ import dev.isxander.xso.XandersSodiumOptions;
 import dev.isxander.xso.config.XsoConfig;
 import dev.isxander.xso.mixins.compat.DynamicLightsConfigAccessor;
 import dev.isxander.xso.mixins.compat.SettingEntryAccessor;
+import dev.isxander.xso.utils.ScreenCompat;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
@@ -38,8 +39,12 @@ public class LDLCompat {
                             Screen proxy = new Screen(Component.empty()) {
                                 @Override
                                 protected void init() {
-                                    minecraft.setScreen(XandersSodiumOptions.wrapSodiumScreen(
-                                            videoSettingsScreen, ConfigManager.CONFIG.getModOptions(), prevScreen));
+                                    ScreenCompat.setScreen(
+                                            minecraft,
+                                            XandersSodiumOptions.wrapSodiumScreen(
+                                                    videoSettingsScreen,
+                                                    ConfigManager.CONFIG.getModOptions(),
+                                                    prevScreen));
                                 }
                             };
                             return new SettingsScreen(proxy);
@@ -47,7 +52,7 @@ public class LDLCompat {
                             XandersSodiumOptions.LOGGER.error("Failed to open LambDynamicLights settings screen", e);
 
                             return new net.minecraft.client.gui.screens.AlertScreen(
-                                    () -> client.setScreen(null),
+                                    () -> ScreenCompat.setScreen(client, null),
                                     Component.literal("LambDynamicLights Integration Error"),
                                     Component.literal(
                                             "Xander's Sodium Options failed to open LambDynamicLights settings screen.\n\n"

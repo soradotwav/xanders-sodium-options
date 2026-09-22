@@ -8,7 +8,10 @@ version = "${mod_version}"
 displayName = "Xander's Sodium Options: Continued"
 description = "Replaces the Sodium options GUI with vanilla-style alternatives."
 authors = "isXander, IMB11, soradotwav"
-logoFile = "icon.png"
+${target_icon_key} = "icon.png"
+
+[features.xanders_sodium_options]
+javaVersion = "[${target_java},)"
 
 [[mixins]]
 config = "xanders-sodium-options.mixins.json"
@@ -16,14 +19,14 @@ config = "xanders-sodium-options.mixins.json"
 [[dependencies."xanders_sodium_options"]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.11,)"
+versionRange = "${target_neoforge}"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies."xanders_sodium_options"]]
 modId = "minecraft"
 type = "required"
-versionRange = "[${target_minecraft},)"
+versionRange = "${target_minecraft_range}"
 ordering = "NONE"
 side = "CLIENT"
 
@@ -37,6 +40,6 @@ side = "CLIENT"
 [[dependencies."xanders_sodium_options"]]
 modId = "yet_another_config_lib_v3"
 type = "required"
-versionRange = "[3.6.0,)"
+versionRange = "${target_yacl}"
 ordering = "AFTER"
 side = "CLIENT"
