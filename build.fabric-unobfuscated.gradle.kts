@@ -96,7 +96,9 @@ tasks.processResources {
             "mod_version" to project.version,
             "target_minecraft" to project.property("mod.target"),
             "target_sodium" to project.property("target.sodium"),
-            "target_fabricloader" to project.property("deps.fabric_loader")
+            "target_fabricloader" to project.property("deps.fabric_loader"),
+            "target_java" to 25,
+            "target_yacl" to project.property("target.yacl")
     )
 
     inputs.properties(props)
