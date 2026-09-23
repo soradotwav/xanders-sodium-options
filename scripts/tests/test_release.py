@@ -16,6 +16,25 @@ r = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(r)
 
 
+class GitHubRequestTests(unittest.TestCase):
+    def test_repository_lookup_uses_exact_endpoint_without_trailing_slash(self):
+        with patch.dict(r.os.environ, {"GITHUB_REPOSITORY": "owner/repo", "GH_TOKEN": "test-only"}), \
+                patch.object(r, "request", return_value={"default_branch": "main"}) as request:
+            self.assertEqual(r.github(""), {"default_branch": "main"})
+            request.assert_called_once_with("https://api.github.com/repos/owner/repo", headers=r.gh_headers())
+
+    def test_subresource_paths_and_request_arguments_are_preserved(self):
+        with patch.dict(r.os.environ, {"GITHUB_REPOSITORY": "owner/repo", "GH_TOKEN": "test-only"}), \
+                patch.object(r, "request") as request:
+            r.github("git/ref/tags/fix", missing_ok=True)
+            request.assert_called_with("https://api.github.com/repos/owner/repo/git/ref/tags/fix",
+                                       headers=r.gh_headers(), missing_ok=True)
+            payload = {"ref": "refs/tags/fix", "sha": "a" * 40}
+            r.github("git/refs", method="POST", payload=payload)
+            request.assert_called_with("https://api.github.com/repos/owner/repo/git/refs",
+                                       headers=r.gh_headers(), method="POST", payload=payload)
+
+
 class VersionTests(unittest.TestCase):
     def test_three_release_choices(self):
         self.assertEqual(r.next_version("3.5.1", "fix"), "3.5.2")
