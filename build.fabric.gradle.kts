@@ -31,6 +31,8 @@ repositories {
     }
 }
 
+val withCompatMods = providers.gradleProperty("xso.compatRuntime").map { it.toBoolean() }.getOrElse(false)
+
 dependencies {
     // Base Fabric setup (Keep these!)
     minecraft("com.mojang:minecraft:${sc.current.version}")
@@ -48,38 +50,32 @@ dependencies {
     modImplementation("maven.modrinth:sodium:${property("deps.sodium")}")
     // (ModMenu is standard for Fabric configs)
     modCompileOnly("com.terraformersmc:modmenu:${property("deps.modmenu")}")
-    modRuntimeOnly("com.terraformersmc:modmenu:${property("deps.modmenu")}")
-
-    // Optional Compat: Sodium Extra
-    modCompileOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
-    modRuntimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
 
     // Optional Compat: More Culling
     modCompileOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
-    modRuntimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
 
     // Optional Compat: Iris
     modCompileOnly("maven.modrinth:iris:${property("deps.iris")}")
-    modRuntimeOnly("maven.modrinth:iris:${property("deps.iris")}")
-
-    // Optional Compat: FancyMenu
-    modCompileOnly("maven.modrinth:fancymenu:${property("deps.fancymenu")}")
 
     // Optional Compat: LambDynamicLights
     modCompileOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
-    modRuntimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
 
     // Optional Compat: SpruceUI (Required by LDL)
     modCompileOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}")
-    modRuntimeOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}")
 
-    // Internal libraries (YACL/MixinSquared)
-    include(modImplementation("net.caffeinemc:CaffeineConfig:1.3.0+1.17")!!)
-    include(modImplementation("me.fallenbreath:conditional-mixin-fabric:+")!!)
-
-    modRuntimeOnly("maven.modrinth:cloth-config:${property("runtime.cloth")}")
-
-    include(implementation(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.2.0")!!)!!)
+    // Optional mods and their libraries are only needed for integration testing.
+    if (withCompatMods) {
+        modRuntimeOnly("com.terraformersmc:modmenu:${property("deps.modmenu")}")
+        modRuntimeOnly("maven.modrinth:sodium-extra:${property("deps.sodium-extra")}")
+        modRuntimeOnly("maven.modrinth:moreculling:${property("deps.moreculling")}")
+        modRuntimeOnly("maven.modrinth:iris:${property("deps.iris")}")
+        modRuntimeOnly("dev.lambdaurora.lambdynamiclights:lambdynamiclights-runtime:${property("deps.lambdynamiclights")}")
+        modRuntimeOnly("dev.lambdaurora:spruceui:${property("deps.spruceui")}")
+        modRuntimeOnly("maven.modrinth:cloth-config:${property("runtime.cloth")}")
+        // Loom strips nested JARs from remapped mods; More Culling bundles these in production.
+        modRuntimeOnly("me.fallenbreath:conditional-mixin-fabric:0.6.4")
+        modRuntimeOnly("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.2.0")
+    }
 }
 
 tasks.processResources {

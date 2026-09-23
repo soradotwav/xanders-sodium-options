@@ -11,8 +11,12 @@ import net.fabricmc.loader.api.FabricLoader;
 *///?}
 
 public enum Compat {
-    SODIUM_EXTRA("sodium-extra", "xso.category.sodium_extra"), MORE_CULLING("moreculling",
-            "xso.category.moreculling"), IRIS("iris", "xso.category.iris"),
+    SODIUM_EXTRA(//? if fabric {
+            "sodium-extra", //?} else {
+            /*"sodium_extra",
+            *///?}
+            "xso.category.sodium_extra"), MORE_CULLING("moreculling",
+                    "xso.category.moreculling"), IRIS("iris", "xso.category.iris"),
 
     // LDL 4.9.1 uses a distinct NeoForge runtime ID; 4.10.0 unifies it with Fabric.
     LAMBDYNAMICLIGHTS(//? if fabric || >=26.1 {

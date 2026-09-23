@@ -7,3 +7,4 @@ build
 versions/*/bin
 .DS_Store
 docs
+__pycache__/
