@@ -35,6 +35,76 @@ class GitHubRequestTests(unittest.TestCase):
                                        headers=r.gh_headers(), method="POST", payload=payload)
 
 
+class RecoveryTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.enterContext(patch.object(r, "ROOT", self.root))
+        self.enterContext(patch.dict(r.os.environ, {"GITHUB_REPOSITORY": "owner/repo",
+                          "GITHUB_EVENT_NAME": "release", "GITHUB_RUN_ATTEMPT": "1"}))
+        self.release = {"id": 123, "name": "Release", "body": "Fixed it", "draft": False,
+                        "prerelease": False, "tag_name": "fix", "published_at": r.datetime.now(r.timezone.utc).isoformat()}
+        self.args = SimpleNamespace(release_id=123, target=None, platform=None)
+
+    def test_initial_published_event_can_start_without_state(self):
+        with patch.object(r, "github", return_value=self.release), patch.object(r, "recovery_artifacts", return_value=[]):
+            r.restore(self.args)
+        self.assertFalse((self.root / "build/release/context.json").exists())
+
+    def test_missing_state_never_silently_restarts_retry(self):
+        for event, attempt, tag in [("workflow_dispatch", "1", "fix"), ("release", "2", "fix"), ("release", "1", "v3.5.2")]:
+            with self.subTest(event=event, attempt=attempt, tag=tag), \
+                    patch.dict(r.os.environ, {"GITHUB_EVENT_NAME": event, "GITHUB_RUN_ATTEMPT": attempt}), \
+                    patch.object(r, "github", return_value={**self.release, "tag_name": tag}), \
+                    patch.object(r, "recovery_artifacts", return_value=[]), self.assertRaisesRegex(r.ReleaseError, "missing"):
+                r.restore(self.args)
+
+    def test_expired_recovery_window_stops_before_looking_up_uploads(self):
+        self.release["published_at"] = (r.datetime.now(r.timezone.utc) - r.timedelta(days=15)).isoformat()
+        with patch.object(r, "github", return_value=self.release), patch.object(r, "recovery_artifacts") as lookup:
+            with self.assertRaisesRegex(r.ReleaseError, "expired"):
+                r.restore(self.args)
+        lookup.assert_not_called()
+
+    def test_untrusted_workflow_artifacts_are_ignored_and_pagination_is_followed(self):
+        def api(path):
+            if path.endswith("page=1"):
+                return {"artifacts": [{"name": "build"}] * 99 + [self.artifact(1, 1)]}
+            if path.endswith("page=2"):
+                return {"artifacts": [self.artifact(2, 2), self.artifact(3, 3), self.artifact(4, 4)]}
+            run_id = int(path.rsplit("/", 1)[1])
+            return {"path": ".github/workflows/publish-release.yml", "event": "pull_request" if run_id == 1 else "release",
+                    "head_repository": {"full_name": "fork/repo" if run_id == 3 else "owner/repo"}}
+        with patch.object(r, "github", side_effect=api):
+            self.assertEqual([a["id"] for a in r.recovery_artifacts(123)], [4, 2])
+
+    def artifact(self, artifact_id, run_id, kind="context"):
+        return {"id": artifact_id, "name": f"release-123-{kind}-1", "expired": False,
+                "workflow_run": {"id": run_id}, "created_at": "2026-09-22T12:00:00Z"}
+
+    def test_expired_artifact_stops_recovery(self):
+        artifact = {**self.artifact(1, 1), "expired": True}
+        with patch.object(r, "github", side_effect=[{"artifacts": [artifact]}, {
+            "path": ".github/workflows/publish-release.yml", "event": "release",
+            "head_repository": {"full_name": "owner/repo"}}]), self.assertRaisesRegex(r.ReleaseError, "expired"):
+            r.recovery_artifacts(123)
+
+    def test_artifact_download_reads_only_the_expected_json(self):
+        data = io.BytesIO()
+        with zipfile.ZipFile(data, "w") as archive:
+            archive.writestr("context.json", '{"version": "3.5.2"}')
+        with patch.object(r, "github", return_value=data.getvalue()):
+            self.assertEqual(r.artifact_json(1, "context.json"), {"version": "3.5.2"})
+            with self.assertRaisesRegex(r.ReleaseError, "Unexpected"):
+                r.artifact_json(1, "plan.json")
+
+    def test_public_upload_rejects_json(self):
+        with patch.object(r, "request") as request, self.assertRaisesRegex(r.ReleaseError, "Only JARs"):
+            r.upload_asset(123, "release-state.json", b"{}")
+        request.assert_not_called()
+
+
 class VersionTests(unittest.TestCase):
     def test_three_release_choices(self):
         self.assertEqual(r.next_version("3.5.1", "fix"), "3.5.2")
@@ -82,7 +152,7 @@ class ArtifactFixture(unittest.TestCase):
                      ["1.21.10", "1.21.11", "26.1", "26.1.1", "26.1.2", "26.1.3", "26.2", "26.3", "26.4"])
         self.ctx = {"tag": "v3.5.2", "sha": "a" * 40, "release_id": 1,
                     "source_sha": "b" * 40, "version": "3.5.2", "previous": "3.5.1", "selector": "fix",
-                    "branch": "main", "timestamp": "2026-09-22T12:00:00Z",
+                    "branch": "main", "timestamp": r.datetime.now(r.timezone.utc).isoformat(),
                     "name": "Xander's Sodium Options: Continued 3.5.2", "repository": "owner/repo", "body": "## Shared\nFixed launch.\n## NeoForge\nFixed detection.", "prerelease": False}
         self.artifacts = []
         for folder in sorted((r.ROOT / "versions").iterdir()):
@@ -148,6 +218,11 @@ class PlanTests(ArtifactFixture):
     def test_tag_must_match_version(self):
         with self.assertRaises(r.ReleaseError):
             r.make_plan(self.root, {**self.ctx, "tag": "v3.5.3"})
+
+    def test_retry_uses_saved_version_even_when_tooling_checkout_has_advanced(self):
+        (self.root / "gradle.properties").write_text("mod.version=3.6.0\n")
+        plan = r.make_plan(self.root, self.ctx)
+        self.assertTrue(all(t["modrinth"]["version_number"].startswith("3.5.2+") for t in plan["targets"]))
 
     def test_prerelease_checkbox_controls_platform_channel(self):
         for t in r.make_plan(self.root, {**self.ctx, "prerelease": True})["targets"]:
@@ -248,31 +323,31 @@ class PublishTests(ArtifactFixture):
     def setUp(self):
         super().setUp()
         self.plan = r.make_plan(self.root, self.ctx)
-        r.write_json(self.root / "build/release/plan.json", self.plan)
+        for name, value in [("context.json", self.ctx), ("plan.json", self.plan), ("frozen-plan.json", self.plan)]:
+            r.write_json(self.root / "build/release" / name, value)
         self.target = self.plan["targets"][0]
-        self.remote = {"publishing-plan.json": json.dumps(self.plan).encode()}
-        for target in self.plan["targets"]:
-            self.remote[target["filename"]] = (self.root / target["path"]).read_bytes()
-        self.stack = self.enterContext(ExitStack())
-        self.stack.enter_context(patch.object(r, "ROOT", self.root))
-        self.stack.enter_context(patch.dict(r.os.environ, {"GITHUB_REPOSITORY": "owner/repo",
+        self.remote = {t["filename"]: (self.root / t["path"]).read_bytes() for t in self.plan["targets"]}
+        self.enterContext(patch.object(r, "ROOT", self.root))
+        self.enterContext(patch.dict(r.os.environ, {"GITHUB_REPOSITORY": "owner/repo",
             "MODRINTH_TOKEN": "test-only", "CURSEFORGE_TOKEN": "test-only"}))
-        self.stack.enter_context(patch.object(r, "assets", side_effect=lambda _: {
-            name: {"name": name} for name in self.remote}))
-        self.stack.enter_context(patch.object(r, "asset_bytes", side_effect=lambda asset: self.remote[asset["name"]]))
-        self.upload = self.stack.enter_context(patch.object(r, "upload_asset", side_effect=self.save_asset))
-        self.github = self.stack.enter_context(patch.object(r, "github", return_value={
-            **self.ctx, "id": 1, "draft": False, "tag_name": "v3.5.2"}))
-        self.stack.enter_context(patch.object(r, "finalize_tag"))
-        self.lookup = self.stack.enter_context(patch.object(r, "find_modrinth_version", return_value=None))
-        self.request = self.stack.enter_context(patch.object(r, "request", side_effect=self.respond))
-        self.stack.enter_context(patch.object(r, "summary"))
+        self.enterContext(patch.object(r, "assets", side_effect=lambda _: {n: {"name": n} for n in self.remote}))
+        self.enterContext(patch.object(r, "asset_bytes", side_effect=lambda a: self.remote[a["name"]]))
+        self.upload = self.enterContext(patch.object(r, "upload_asset", side_effect=self.save_asset))
+        self.enterContext(patch.object(r, "github", return_value={**self.ctx, "id": 1, "draft": False,
+                          "tag_name": "v3.5.2", "published_at": self.ctx["timestamp"]}))
+        self.enterContext(patch.object(r, "finalize_tag"))
+        self.lookup = self.enterContext(patch.object(r, "find_modrinth_version", return_value=None))
+        self.request = self.enterContext(patch.object(r, "request", side_effect=self.respond))
+        self.enterContext(patch.object(r, "summary"))
+        self.output = self.enterContext(patch.object(r, "output"))
         self.response = {"id": 12345}
+        self.checkpoint = self.enterContext(patch.object(r, "artifact_json", side_effect=lambda _, name:
+            json.loads((self.root / "build/release" / name).read_text())))
 
     def save_asset(self, release_id, name, data, *args):
-        self.assertNotIn(name, self.remote, "Never overwrite an existing receipt or pending marker")
+        self.assertTrue(name.endswith(".jar"))
+        self.assertNotIn(name, self.remote)
         self.remote[name] = data
-        return {"id": 99}
 
     def respond(self, url, *args, **kwargs):
         if url.endswith("/game/versions"):
@@ -281,69 +356,115 @@ class PublishTests(ArtifactFixture):
             raise self.response
         return self.response
 
-    def run_publish(self, platform):
-        r.publish(SimpleNamespace(target=self.target["target"], platform=platform))
+    def args(self, platform):
+        return SimpleNamespace(target=self.target["target"], platform=platform, artifact_id=123)
 
-    def test_successful_uploads_are_not_repeated(self):
+    def restore_file(self, name):
+        value = json.loads((self.root / "build/release" / name).read_text())
+        r.write_json(self.root / "build/release/upload-state.json", value)
+
+    def test_staging_and_publishing_attach_only_jars(self):
+        self.remote.clear()
+        r.stage(None)
+        self.assertEqual(set(self.remote), {t["filename"] for t in self.plan["targets"]})
+        self.upload.reset_mock()
+        for platform in ["modrinth", "curseforge"]:
+            r.begin_upload(self.args(platform))
+            r.publish(self.args(platform))
+        self.upload.assert_not_called()
+
+    def test_successful_upload_is_skipped_after_runner_restart(self):
+        r.begin_upload(self.args("curseforge"))
+        r.publish(self.args("curseforge"))
+        self.restore_file("outcome.json")
+        self.request.reset_mock()
+        r.begin_upload(self.args("curseforge"))
+        self.output.assert_called_with(upload="false")
+        self.request.assert_not_called()
+
+    def test_unconfirmed_upload_blocks_a_second_post(self):
         for platform in ["modrinth", "curseforge"]:
             with self.subTest(platform=platform):
-                self.run_publish(platform)
-                self.request.reset_mock()
-                self.upload.reset_mock()
-                self.run_publish(platform)
-                self.request.assert_not_called()
-                self.upload.assert_not_called()
-
-    def test_uncertain_upload_blocks_second_post(self):
-        for platform in ["modrinth", "curseforge"]:
-            with self.subTest(platform=platform):
+                (self.root / "build/release/upload-state.json").unlink(missing_ok=True)
+                r.begin_upload(self.args(platform))
                 self.response = r.ReleaseError("No confirmed response")
                 with self.assertRaises(r.ReleaseError):
-                    self.run_publish(platform)
-                self.assertIn(f"publish-{platform}-{self.target['target']}.pending.json", self.remote)
+                    r.publish(self.args(platform))
+                self.restore_file("pending.json")
                 self.request.reset_mock()
                 with self.assertRaisesRegex(r.ReleaseError, "Unconfirmed"):
-                    self.run_publish(platform)
+                    r.begin_upload(self.args(platform))
                 self.request.assert_not_called()
 
-    def test_explicit_rejection_clears_pending_marker(self):
+    def test_confirmed_rejection_can_be_retried(self):
+        r.begin_upload(self.args("modrinth"))
         self.response = r.ApiError(422, "api.modrinth.com")
         with self.assertRaises(r.ApiError):
-            self.run_publish("modrinth")
-        self.github.assert_called_with("releases/assets/99", method="DELETE")
+            r.publish(self.args("modrinth"))
+        self.restore_file("outcome.json")
+        r.begin_upload(self.args("modrinth"))
+        self.output.assert_called_with(upload="true")
 
-    def test_modrinth_success_can_be_recovered_after_lost_response(self):
-        self.remote[f"publish-modrinth-{self.target['target']}.pending.json"] = b"{}"
+    def test_modrinth_success_is_recovered_after_lost_response(self):
+        r.begin_upload(self.args("modrinth"))
+        self.restore_file("pending.json")
         self.lookup.return_value = "existing"
-        self.run_publish("modrinth")
+        r.begin_upload(self.args("modrinth"))
+        self.output.assert_called_with(upload="false")
+        self.assertEqual(json.loads((self.root / "build/release/outcome.json").read_text())["id"], "existing")
         self.request.assert_not_called()
-        receipt = json.loads(self.remote[f"publish-modrinth-{self.target['target']}.json"])
-        self.assertEqual(receipt["id"], "existing")
 
-    def test_changed_asset_is_never_uploaded(self):
+    def test_upload_requires_a_matching_remote_checkpoint(self):
+        r.begin_upload(self.args("modrinth"))
+        self.checkpoint.side_effect = None
+        self.checkpoint.return_value = {}
+        with self.assertRaisesRegex(r.ReleaseError, "intent must be saved"):
+            r.publish(self.args("modrinth"))
+        self.request.assert_not_called()
+
+    def test_changed_jar_or_receipt_prevents_upload(self):
         self.remote[self.target["filename"]] = b"changed"
         with self.assertRaisesRegex(r.ReleaseError, "checksum"):
-            self.run_publish("modrinth")
-        self.upload.assert_not_called()
+            r.begin_upload(self.args("modrinth"))
+        record = r.upload_record(self.plan, self.target, "modrinth", "complete", 123)
+        record["fingerprint"] = "changed"
+        r.write_json(self.root / "build/release/upload-state.json", record)
+        with self.assertRaisesRegex(r.ReleaseError, "different bytes"):
+            r.begin_upload(self.args("modrinth"))
         self.request.assert_not_called()
 
-    def test_frozen_notes_cannot_be_changed_on_retry(self):
+    def test_saved_notes_cannot_be_changed_on_retry(self):
         self.plan["targets"][0]["modrinth"]["changelog"] = "changed"
         r.write_json(self.root / "build/release/plan.json", self.plan)
         with self.assertRaisesRegex(r.ReleaseError, "metadata changed"):
             r.stage(None)
         self.upload.assert_not_called()
 
-    def test_curseforge_recovery_verifies_file_before_receipt(self):
-        args = SimpleNamespace(target=self.target["target"], file_id=12345)
-        self.response = b"wrong file"
-        with self.assertRaisesRegex(r.ReleaseError, "does not match"):
-            r.recover_curseforge(args)
-        self.upload.assert_not_called()
-        self.response = self.remote[self.target["filename"]]
-        r.recover_curseforge(args)
-        receipt = json.loads(self.remote[f"publish-curseforge-{self.target['target']}.json"])
-        self.assertEqual(receipt["id"], "12345")
+    def test_missing_plan_after_uploads_started_blocks_rebuilding_metadata(self):
+        artifacts = [{"id": 2, "name": "release-1-pending-curseforge-1.21.11-fabric-1"},
+                     {"id": 1, "name": "release-1-context-1"}]
+        self.checkpoint.side_effect = lambda _, name: self.ctx
+        with patch.object(r, "recovery_artifacts", return_value=artifacts), self.assertRaisesRegex(r.ReleaseError, "plan is missing"):
+            r.restore(SimpleNamespace(release_id=1, target=None, platform=None))
+
+    def test_restore_uses_latest_upload_checkpoint_across_runs(self):
+        target, platform = self.target["target"], "curseforge"
+        pending = r.upload_record(self.plan, self.target, platform, "pending")
+        complete = r.upload_record(self.plan, self.target, platform, "complete", 123)
+        def item(i, kind):
+            return {"id": i, "name": f"release-1-{kind}-1"}
+        artifacts = [item(4, f"result-{platform}-{target}"), item(3, f"pending-{platform}-{target}"),
+                     item(2, "plan"), item(1, "context")]
+        self.checkpoint.side_effect = lambda artifact_id, _: {1: self.ctx, 2: self.plan, 3: pending, 4: complete}[artifact_id]
+        with patch.object(r, "recovery_artifacts", return_value=artifacts):
+            r.restore(SimpleNamespace(release_id=1, target=target, platform=platform))
+        self.assertEqual(json.loads((self.root / "build/release/upload-state.json").read_text()), complete)
+        # A later pending attempt must win over an older confirmed rejection.
+        artifacts.insert(0, item(5, f"pending-{platform}-{target}"))
+        self.checkpoint.side_effect = lambda artifact_id, _: {1: self.ctx, 2: self.plan, 3: pending, 4: complete, 5: pending}[artifact_id]
+        with patch.object(r, "recovery_artifacts", return_value=artifacts):
+            r.restore(SimpleNamespace(release_id=1, target=target, platform=platform))
+        self.assertEqual(json.loads((self.root / "build/release/upload-state.json").read_text()), pending)
 
 
 class ReleaseFlowTests(unittest.TestCase):
@@ -368,20 +489,18 @@ class ReleaseFlowTests(unittest.TestCase):
         self.git("push", "origin", "main")
         self.release = {"id": 1, "tag_name": "fix", "draft": False, "immutable": False,
                         "name": "My exact title", "body": "- Fixed the bug.",
-                        "prerelease": False, "published_at": "2026-09-22T12:00:00Z"}
+                        "prerelease": False, "published_at": r.datetime.now(r.timezone.utc).isoformat()}
         self.saved = {}
         self.stack = self.enterContext(ExitStack())
         self.stack.enter_context(patch.object(r, "ROOT", self.root))
         self.stack.enter_context(patch.object(r, "git", side_effect=self.git))
-        self.stack.enter_context(patch.dict(r.os.environ, {"GITHUB_REPOSITORY": "owner/repo"}))
+        self.stack.enter_context(patch.dict(r.os.environ, {"GITHUB_REPOSITORY": "owner/repo", "GITHUB_EVENT_NAME": "release", "GITHUB_RUN_ATTEMPT": "1"}))
         self.stack.enter_context(patch.object(r, "request", side_effect=AssertionError("No live HTTP in tests")))
         self.stack.enter_context(patch.object(r, "github", side_effect=self.api))
         self.stack.enter_context(patch.object(r, "summary"))
         self.stack.enter_context(patch.object(r, "output"))
-        self.stack.enter_context(patch.object(r, "assets", side_effect=lambda _: {
-            name: {"name": name} for name in self.saved}))
-        self.stack.enter_context(patch.object(r, "asset_bytes", side_effect=lambda a: self.saved[a["name"]]))
-        self.stack.enter_context(patch.object(r, "upload_asset", side_effect=self.upload))
+        self.stack.enter_context(patch.object(r, "upload_asset", side_effect=AssertionError("Version state must not be a public asset")))
+        self.stack.enter_context(patch.object(r, "artifact_json", side_effect=lambda _, name: copy.deepcopy(self.saved[name])))
 
     def git(self, *args, env=None):
         env = {**r.os.environ, **(env or {}), "GIT_CONFIG_GLOBAL": r.os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
@@ -390,11 +509,6 @@ class ReleaseFlowTests(unittest.TestCase):
 
     def remote_git(self, *args):
         return self.git("--git-dir=" + str(self.remote), *args)
-
-    def upload(self, release_id, name, data):
-        self.assertNotIn(name, self.saved)
-        self.saved[name] = data
-        return {"id": 99}
 
     def api(self, path, method="GET", payload=None, missing_ok=False):
         if path == "":
@@ -425,7 +539,18 @@ class ReleaseFlowTests(unittest.TestCase):
 
     def prepare(self):
         r.prepare(SimpleNamespace(release_id=self.release["id"]))
-        return json.loads(self.saved["release-state.json"])
+        state = json.loads((self.root / "build/release/context.json").read_text())
+        self.saved["context.json"] = copy.deepcopy(state)  # Simulate upload-artifact.
+        r.commit_version(SimpleNamespace(artifact_id=1))
+        return state
+
+    def test_preparation_does_not_push_until_context_is_saved(self):
+        r.prepare(SimpleNamespace(release_id=1))
+        self.assertEqual(self.remote_git("rev-parse", "main"), self.source)
+        with patch.object(r, "artifact_json", return_value={}):
+            with self.assertRaisesRegex(r.ReleaseError, "must be saved"):
+                r.commit_version(SimpleNamespace(artifact_id=1))
+        self.assertEqual(self.remote_git("rev-parse", "main"), self.source)
 
     def test_release_bumps_commits_and_retags_without_changing_title_or_notes(self):
         state = self.prepare()
@@ -448,7 +573,7 @@ class ReleaseFlowTests(unittest.TestCase):
         with patch.object(r, "push_version_commit", side_effect=r.ReleaseError("interrupted")):
             with self.assertRaisesRegex(r.ReleaseError, "interrupted"):
                 self.prepare()
-        state = json.loads(self.saved["release-state.json"])
+        state = copy.deepcopy(self.saved["context.json"])
         self.assertEqual(self.remote_git("rev-parse", "main"), self.source)
         self.assertEqual(self.prepare(), state)
         self.assertEqual(self.remote_git("rev-parse", "main"), state["sha"])
@@ -457,6 +582,7 @@ class ReleaseFlowTests(unittest.TestCase):
         first = self.prepare()
         r.finalize_tag(first)
         self.saved = {}
+        (self.root / "build/release/context.json").unlink()
         self.release.update(id=2, tag_name="fix", name="Another fix", body="- Another change.")
         second = self.prepare()
         r.finalize_tag(second)

@@ -6,12 +6,17 @@ on:
   workflow_dispatch:
     inputs:
       release_id:
-        description: GitHub release ID to retry (shown in the original run)
+        description: GitHub release ID to retry within 14 days (shown in the original run)
         type: string
         required: true
 
 permissions:
   contents: read
+  actions: read
+
+env:
+  RELEASE_ID: ${{ github.event.release.id || inputs.release_id }}
+  GH_TOKEN: ${{ github.token }}
 
 # The selector maintenance workflow uses this group too. Never cancel uploads.
 concurrency:
@@ -24,8 +29,12 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+      actions: read
+    env:
+      XSO_RELEASE_ROOT: ${{ github.workspace }}
     outputs:
       sha: ${{ steps.prepare.outputs.sha }}
+      tooling_sha: ${{ steps.prepare.outputs.tooling_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,21 +42,26 @@ jobs:
           fetch-depth: 0
       - name: Test release tooling
         run: python3 -m unittest discover -s scripts/tests -v
-      - name: Commit version bump or resume saved release
-        id: prepare
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_ID: ${{ github.event.release.id || inputs.release_id }}
+      - name: Restore recovery data and preserve current tooling
         run: |
           echo "Release ID: $RELEASE_ID" >> "$GITHUB_STEP_SUMMARY"
-          python3 scripts/release.py prepare --release-id "$RELEASE_ID"
-      - uses: actions/upload-artifact@v4
+          cp scripts/release.py "$RUNNER_TEMP/release.py"
+          python3 "$RUNNER_TEMP/release.py" restore --release-id "$RELEASE_ID"
+      - name: Prepare version commit locally
+        id: prepare
+        run: python3 "$RUNNER_TEMP/release.py" prepare --release-id "$RELEASE_ID"
+      - name: Save version before pushing
+        id: context
+        uses: actions/upload-artifact@v4
         with:
-          name: release-context
+          name: release-${{ env.RELEASE_ID }}-context-${{ github.run_attempt }}
           path: build/release/context.json
           if-no-files-found: error
-          overwrite: true
           retention-days: 14
+      - name: Commit saved version to main
+        env:
+          ARTIFACT_ID: ${{ steps.context.outputs.artifact-id }}
+        run: python3 "$RUNNER_TEMP/release.py" commit-version --artifact-id "$ARTIFACT_ID"
 
   build:
     needs: prepare
@@ -62,16 +76,16 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+      actions: read
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare.outputs.sha }}
-      - uses: actions/download-artifact@v4
-        with:
-          name: release-context
-          path: build/release
+          # Tooling can be newer than the release; builds still use its saved SHA.
+          ref: ${{ needs.prepare.outputs.tooling_sha }}
+      - name: Restore saved release context and any previous plan
+        run: python3 scripts/release.py restore --release-id "$RELEASE_ID"
       - uses: actions/download-artifact@v4
         with:
           name: release-jars
@@ -82,15 +96,13 @@ jobs:
         id: plan
         run: python3 scripts/release.py plan
       - name: Assign final version tag and attach validated JARs
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: python3 scripts/release.py stage
-      - uses: actions/upload-artifact@v4
+      - name: Save publishing plan before platform uploads
+        uses: actions/upload-artifact@v4
         with:
-          name: publishing-plan
+          name: release-${{ env.RELEASE_ID }}-plan-${{ github.run_attempt }}
           path: build/release/plan.json
           if-no-files-found: error
-          overwrite: true
           retention-days: 14
 
   publish:
@@ -98,25 +110,46 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: publishing
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       max-parallel: 2
       matrix: ${{ fromJSON(needs.package.outputs.matrix) }}
+    env:
+      TARGET: ${{ matrix.target }}
+      PLATFORM: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare.outputs.sha }}
-      - uses: actions/download-artifact@v4
-        with:
-          name: publishing-plan
-          path: build/release
-      - name: Upload or verify completed upload
+          ref: ${{ needs.prepare.outputs.tooling_sha }}
+      - name: Restore publishing plan and previous upload result
+        run: python3 scripts/release.py restore --release-id "$RELEASE_ID" --target "$TARGET" --platform "$PLATFORM"
+      - name: Check whether this upload is needed
+        id: begin
         env:
-          GH_TOKEN: ${{ github.token }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-          TARGET: ${{ matrix.target }}
-          PLATFORM: ${{ matrix.platform }}
-        run: python3 scripts/release.py publish --target "$TARGET" --platform "$PLATFORM"
+        run: python3 scripts/release.py begin-upload --target "$TARGET" --platform "$PLATFORM"
+      - name: Save upload intent before sending the file
+        if: steps.begin.outputs.upload == 'true'
+        id: pending
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ env.RELEASE_ID }}-pending-${{ matrix.platform }}-${{ matrix.target }}-${{ github.run_attempt }}
+          path: build/release/pending.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish file
+        if: steps.begin.outputs.upload == 'true'
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          ARTIFACT_ID: ${{ steps.pending.outputs.artifact-id }}
+        run: python3 scripts/release.py publish --target "$TARGET" --platform "$PLATFORM" --artifact-id "$ARTIFACT_ID"
+      - name: Save confirmed upload or rejection
+        if: ${{ always() && hashFiles('build/release/outcome.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ env.RELEASE_ID }}-result-${{ matrix.platform }}-${{ matrix.target }}-${{ github.run_attempt }}
+          path: build/release/outcome.json
+          if-no-files-found: error
+          retention-days: 14

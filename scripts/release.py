@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Release preparation and publishing. Python 3.11+, standard library only.
 
-Network writes occur in selectors, prepare, stage, publish, and recover-curseforge.
+Only commit-version, selectors, stage and publish write to remote services.
 The plan command is offline and never reads publishing credentials.
 """
 import argparse
+from datetime import datetime, timedelta, timezone
 import hashlib
 import io
 import json
@@ -20,9 +21,10 @@ from urllib.request import Request, urlopen
 import uuid
 import zipfile
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get("XSO_RELEASE_ROOT", Path(__file__).resolve().parents[1]))
 VERSION = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(alpha|beta|rc)\.(0|[1-9]\d*))?")
 SELECTORS = ("fix", "minor", "major")
+RECOVERY_DAYS = 14
 MR_API = "https://api.modrinth.com/v2"
 CF_API = "https://minecraft.curseforge.com/api"
 MINECRAFT_MANIFEST = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
@@ -181,10 +183,94 @@ def assets(release_id):
         page += 1
 
 
-def upload_asset(release_id, name, data, content_type="application/json"):
+def upload_asset(release_id, name, data, content_type="application/java-archive"):
+    require(name.endswith(".jar") and content_type == "application/java-archive",
+            "Only JARs belong in public release assets")
     return request(f"https://uploads.github.com/repos/{repo()}/releases/{release_id}/assets?" +
                    urlencode({"name": name}), method="POST", payload=data,
                    headers={**gh_headers(), "Content-Type": content_type})
+
+
+def recovery_window(release):
+    published = datetime.fromisoformat(release["published_at"].replace("Z", "+00:00"))
+    require(datetime.now(timezone.utc) < published + timedelta(days=RECOVERY_DAYS),
+            "The 14-day recovery window has expired. Inspect existing uploads before any further publishing")
+
+
+def artifact_json(artifact_id, filename):
+    data = github(f"actions/artifacts/{artifact_id}/zip", raw=True)
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        require(archive.namelist() == [filename], "Unexpected recovery artifact contents")
+        return json.loads(archive.read(filename))
+
+
+def recovery_artifacts(release_id):
+    """Only accept checkpoints from this repository's publishing workflow."""
+    prefix = f"release-{release_id}-"
+    found, runs = [], {}
+    page = 1
+    while True:
+        batch = github(f"actions/artifacts?per_page=100&page={page}")["artifacts"]
+        for artifact in batch:
+            if not artifact["name"].startswith(prefix):
+                continue
+            run_id = artifact["workflow_run"]["id"]
+            if run_id not in runs:
+                runs[run_id] = github(f"actions/runs/{run_id}")
+            run = runs[run_id]
+            if (run["path"].split("@")[0] != ".github/workflows/publish-release.yml" or
+                    run["event"] not in ("release", "workflow_dispatch") or
+                    run["head_repository"]["full_name"] != repo()):
+                continue
+            require(not artifact["expired"], "Recovery artifacts expired. Inspect existing uploads before retrying")
+            found.append(artifact)
+        if len(batch) < 100:
+            return sorted(found, key=lambda a: (a["created_at"], a["id"]), reverse=True)
+        page += 1
+
+
+def saved_artifact(artifacts, release_id, kind, filename):
+    pattern = re.compile(rf"release-{release_id}-{re.escape(kind)}-[1-9][0-9]*")
+    match = next((a for a in artifacts if pattern.fullmatch(a["name"])), None)
+    return artifact_json(match["id"], filename) if match else None
+
+
+def restore(args):
+    require(args.release_id > 0, "A positive GitHub release ID is required")
+    require(bool(args.target) == bool(args.platform), "Restore an upload with both target and platform")
+    release = github(f"releases/{args.release_id}")
+    check_release(release)
+    recovery_window(release)
+    artifacts = recovery_artifacts(args.release_id)
+    context = saved_artifact(artifacts, args.release_id, "context", "context.json")
+    if context is None:
+        # Once a run might have changed remote state, missing data is not proof
+        # that nothing happened. Only the initial published event can start fresh.
+        require(not artifacts and release["tag_name"] in SELECTORS and
+                os.environ.get("GITHUB_EVENT_NAME") == "release" and
+                os.environ.get("GITHUB_RUN_ATTEMPT") == "1",
+                "Recovery data is missing. Inspect existing version commits and uploads before retrying")
+        return
+    check_release(release, context)
+    write_json(ROOT / "build/release/context.json", context)
+    value = saved_artifact(artifacts, args.release_id, "plan", "plan.json")
+    require(value is not None or not any(re.match(
+        rf"release-{args.release_id}-(pending|result)-", a["name"]) for a in artifacts),
+        "The publishing plan is missing but uploads were attempted; inspect previous uploads before retrying")
+    if value is not None:
+        require({k: v for k, v in value.items() if k != "targets"} == context,
+                "Saved publishing plan differs from release context")
+        write_json(ROOT / "build/release/plan.json", value)
+        write_json(ROOT / "build/release/frozen-plan.json", value)
+    if args.target:
+        require(value is not None, "The publishing plan is missing; inspect previous uploads before retrying")
+        suffix = f"{args.platform}-{args.target}"
+        matches = [a for a in artifacts if re.fullmatch(
+            rf"release-{args.release_id}-(pending|result)-{re.escape(suffix)}-[1-9][0-9]*", a["name"])]
+        if matches:
+            latest = matches[0]
+            filename = "pending.json" if "-pending-" in latest["name"] else "outcome.json"
+            write_json(ROOT / "build/release/upload-state.json", artifact_json(latest["id"], filename))
 
 
 def set_version(root, version):
@@ -193,13 +279,6 @@ def set_version(root, version):
     text, count = re.subn(r"(?m)^mod\.version=.*$", "mod.version=" + version, path.read_text())
     require(count == 1, "Expected one mod.version property")
     path.write_text(text)
-
-
-def validate_version(tag, root=ROOT):
-    require(tag.startswith("v") and VERSION.fullmatch(tag[1:]), "Invalid version tag")
-    version = tag[1:]
-    require(properties(root / "gradle.properties")["mod.version"] == version, "Tag and mod.version disagree")
-    return version
 
 
 def bot_environment(timestamp):
@@ -274,13 +353,18 @@ def prepare(args):
     check_release(release)
     default = github("")["default_branch"]
     git("fetch", "origin", f"+refs/heads/{default}:refs/remotes/origin/{default}")
-    current = assets(release["id"])
-    if "release-state.json" in current:
-        state = json.loads(asset_bytes(current["release-state.json"]))
+    tooling_sha = git("rev-parse", "HEAD")
+    recovery_window(release)
+    context = ROOT / "build/release/context.json"
+    state = json.loads(context.read_text()) if context.exists() else None
+    if state is not None:
         check_release(release, state)
         require(state["branch"] == default, "Default branch changed during release")
         require(make_version_commit(state) == state["sha"], "Cannot recreate the saved version commit")
     else:
+        require(os.environ.get("GITHUB_EVENT_NAME") == "release" and
+                os.environ.get("GITHUB_RUN_ATTEMPT") == "1",
+                "Missing saved context; refuse to calculate another version on a retry")
         selector = release["tag_name"]
         require(selector in SELECTORS, "New releases must use the fix, minor or major tag")
         require(not git("status", "--porcelain"), "Release preparation requires a clean checkout")
@@ -294,13 +378,21 @@ def prepare(args):
                  "version": version, "tag": "v" + version, "timestamp": release["published_at"],
                  "name": release["name"], "body": release["body"], "prerelease": release["prerelease"]}
         state["sha"] = make_version_commit(state)
-        # Persist the chosen version and commit BEFORE updating any remote refs.
-        upload_asset(release["id"], "release-state.json", json.dumps(state, indent=2).encode())
-    push_version_commit(state)
+    # The workflow uploads context.json BEFORE commit-version pushes anything.
     write_json(ROOT / "build/release/context.json", state)
-    output(sha=state["sha"], tag=state["tag"])
-    summary(f"Prepared {state['tag']} from `{state['source_sha']}`. "
-            f"The version commit `{state['sha']}` is on `{default}`. Title: {state['name']}")
+    output(sha=state["sha"], tag=state["tag"], tooling_sha=tooling_sha)
+    summary(f"Prepared {state['tag']} from `{state['source_sha']}`. Title: {state['name']}")
+
+
+def commit_version(args):
+    state = json.loads((ROOT / "build/release/context.json").read_text())
+    require(artifact_json(args.artifact_id, "context.json") == state,
+            "Version context must be saved as an Actions artifact before pushing")
+    release = github(f"releases/{state['release_id']}")
+    check_release(release, state)
+    recovery_window(release)
+    push_version_commit(state)
+    summary(f"Committed {state['version']} to {state['branch']}.")
 
 
 def selectors(args=None):
@@ -323,8 +415,8 @@ def selectors(args=None):
 def finalize_tag(state):
     release = github(f"releases/{state['release_id']}")
     check_release(release, state)
-    current = assets(state["release_id"])
-    require(json.loads(asset_bytes(current["release-state.json"])) == state, "Release state differs from saved preparation")
+    require(json.loads((ROOT / "build/release/context.json").read_text()) == state,
+            "Release state differs from saved preparation")
     ref = github("git/ref/tags/" + state["tag"], missing_ok=True)
     if ref:
         require(ref["object"]["type"] == "commit" and ref["object"]["sha"] == state["sha"],
@@ -392,7 +484,9 @@ def game_supported(game, constraint):
 
 
 def make_plan(root, ctx):
-    version = validate_version(ctx["tag"], root)
+    version = ctx["version"]
+    version_key(version)
+    require(ctx["tag"] == "v" + version, "Tag and release version disagree")
     require(isinstance(ctx.get("name"), str) and ctx["name"].strip(), "Enter a release title")
     channel = "beta" if ctx["prerelease"] else "release"
     artifacts = json.loads((root / "build/libs/release-artifacts.json").read_text())
@@ -480,11 +574,10 @@ def stage(args):
             target["sha512"] = hashlib.sha512(frozen).hexdigest()
         else:
             upload_asset(value["release_id"], target["filename"], data, "application/java-archive")
-    if "publishing-plan.json" in existing:
-        frozen_plan = json.loads(asset_bytes(existing["publishing-plan.json"]))
-        require(frozen_plan == value, "Release metadata changed after staging; use a new release instead of changing uploads in progress")
-    else:
-        upload_asset(value["release_id"], "publishing-plan.json", json.dumps(value, indent=2).encode())
+    frozen_path = ROOT / "build/release/frozen-plan.json"
+    if frozen_path.exists():
+        require(json.loads(frozen_path.read_text()) == value,
+                "Release metadata changed after staging; use a new release instead of changing uploads in progress")
     write_json(path, value)
 
 
@@ -521,95 +614,114 @@ def find_modrinth_version(target):
     return version["id"]
 
 
-def publish(args):
+def upload_context(args):
     value = json.loads((ROOT / "build/release/plan.json").read_text())
     require(value["repository"] == repo(), "Plan belongs to a different repository")
+    require(json.loads((ROOT / "build/release/frozen-plan.json").read_text()) == value,
+            "Plan differs from the saved Actions artifact")
     release = github(f"releases/{value['release_id']}")
     check_release(release, value)
+    recovery_window(release)
     require(release["tag_name"] == value["tag"], "Release must use the final version tag before uploading")
     target = next(t for t in value["targets"] if t["target"] == args.target)
-    platform = args.platform
-    token = os.environ.get(platform.upper() + "_TOKEN", "")
-    require(token, f"Missing {platform.upper()}_TOKEN in the publishing environment")
-    current = assets(value["release_id"])
-    frozen = json.loads(asset_bytes(current["publishing-plan.json"]))
-    require(frozen == value, "Plan does not match the frozen GitHub release plan")
-    receipt_name = f"publish-{platform}-{args.target}.json"
-    pending_name = f"publish-{platform}-{args.target}.pending.json"
-    key = fingerprint(target, platform)
-    if receipt_name in current:
-        receipt = json.loads(asset_bytes(current[receipt_name]))
-        require(receipt["fingerprint"] == key, "Previous upload used different bytes or metadata")
-        summary(f"{platform} / {args.target}: already uploaded ({receipt['id']})")
-        return
-    recovered = find_modrinth_version(target) if platform == "modrinth" else None
+    token = os.environ.get(args.platform.upper() + "_TOKEN", "")
+    require(token, f"Missing {args.platform.upper()}_TOKEN in the publishing environment")
+    return value, target, token
+
+
+def upload_record(value, target, platform, status, upload_id=None):
+    record = {"release_id": value["release_id"], "target": target["target"], "platform": platform,
+              "fingerprint": fingerprint(target, platform), "status": status}
+    if upload_id is not None:
+        record["id"] = str(upload_id)
+    return record
+
+
+def begin_upload(args):
+    value, target, token = upload_context(args)
+    pending = upload_record(value, target, args.platform, "pending")
+    state_path = ROOT / "build/release/upload-state.json"
+    prior = json.loads(state_path.read_text()) if state_path.exists() else None
+    if prior:
+        require(all(prior[k] == pending[k] for k in ("release_id", "target", "platform", "fingerprint")),
+                "Previous upload used different bytes or metadata")
+        require(prior["status"] in ("pending", "complete", "rejected"), "Invalid saved upload status")
+        if prior["status"] == "complete":
+            require(prior.get("id"), "Saved upload has no ID")
+            write_json(ROOT / "build/release/outcome.json", prior)
+            output(upload="false")
+            summary(f"{args.platform} / {args.target}: already uploaded ({prior['id']})")
+            return
+    recovered = find_modrinth_version(target) if args.platform == "modrinth" else None
     if recovered:
-        upload_asset(value["release_id"], receipt_name, json.dumps({"fingerprint": key, "id": recovered}).encode())
-        summary(f"{platform} / {args.target}: recovered existing upload ({recovered})")
+        write_json(ROOT / "build/release/outcome.json", upload_record(value, target, args.platform, "complete", recovered))
+        output(upload="false")
+        summary(f"{args.platform} / {args.target}: recovered existing upload ({recovered})")
         return
-    require(pending_name not in current, f"Unconfirmed {platform} upload for {args.target}. Inspect the platform for an existing upload before retrying")
-    data = asset_bytes(current[target["filename"]])
+    require(not prior or prior["status"] != "pending",
+            f"Unconfirmed {args.platform} upload for {args.target}. Inspect the platform before retrying")
+    data = asset_bytes(assets(value["release_id"])[target["filename"]])
     require(hashlib.sha256(data).hexdigest() == target["sha256"], "Release asset checksum mismatch")
-    if platform == "curseforge":
-        # Validate names and token with a read before marking an upload pending.
+    (ROOT / "build/release/upload.jar").write_bytes(data)
+    if args.platform == "curseforge":
         versions = request(CF_API + "/game/versions", headers={"X-Api-Token": token})
-        names = {v["name"] for v in versions}
-        require(set(target[platform]["metadata"]["gameVersionNames"]) <= names,
+        require(set(target["curseforge"]["metadata"]["gameVersionNames"]) <= {v["name"] for v in versions},
                 "CurseForge does not recognize every game version, loader or environment in this upload")
-    pending = upload_asset(value["release_id"], pending_name, json.dumps({"fingerprint": key}).encode())
+    write_json(ROOT / "build/release/pending.json", pending)
+    output(upload="true")
+
+
+def publish(args):
+    value, target, token = upload_context(args)
+    pending = upload_record(value, target, args.platform, "pending")
+    require(artifact_json(args.artifact_id, "pending.json") == pending,
+            "Upload intent must be saved as an Actions artifact before publishing")
+    data = (ROOT / "build/release/upload.jar").read_bytes()
+    require(hashlib.sha256(data).hexdigest() == target["sha256"], "Artifact changed before upload")
     try:
-        if platform == "modrinth":
-            body, headers = multipart("data", target[platform], target["filename"], data)
+        if args.platform == "modrinth":
+            body, headers = multipart("data", target["modrinth"], target["filename"], data)
             result = request(MR_API + "/version", "POST", body, {**headers, "Authorization": token})
         else:
-            body, headers = multipart("metadata", target[platform]["metadata"], target["filename"], data)
-            result = request(f"{CF_API}/projects/{target[platform]['project_id']}/upload-file", "POST", body,
+            body, headers = multipart("metadata", target["curseforge"]["metadata"], target["filename"], data)
+            result = request(f"{CF_API}/projects/{target['curseforge']['project_id']}/upload-file", "POST", body,
                              {**headers, "X-Api-Token": token})
     except ApiError as error:
-        # These statuses confirm rejection. Timeouts/5xx retain the pending marker.
+        # Confirmed rejection is safe to retry. An ambiguous response leaves the
+        # earlier pending artifact in place and blocks an automatic second POST.
         if error.status in (400, 401, 403, 404, 422, 429):
-            github(f"releases/assets/{pending['id']}", method="DELETE")
+            write_json(ROOT / "build/release/outcome.json", {**pending, "status": "rejected"})
         raise
     require(result and result.get("id"), "Upload response has no ID; inspect the pending upload")
-    upload_asset(value["release_id"], receipt_name, json.dumps({"fingerprint": key, "id": str(result["id"])}).encode())
-    summary(f"{platform} / {args.target}: uploaded ({result['id']})")
-
-
-def recover_curseforge(args):
-    """Record a manually confirmed upload after verifying its public file bytes."""
-    value = json.loads((ROOT / "build/release/plan.json").read_text())
-    require(value["repository"] == repo(), "Plan belongs to a different repository")
-    current = assets(value["release_id"])
-    require(json.loads(asset_bytes(current["publishing-plan.json"])) == value, "Recovery plan differs from frozen release plan")
-    target = next(t for t in value["targets"] if t["target"] == args.target)
-    require(args.file_id > 0, "CurseForge file ID must be positive")
-    data = request(f"https://www.curseforge.com/api/v1/mods/{target['curseforge']['project_id']}/files/{args.file_id}/download", raw=True)
-    require(hashlib.sha256(data).hexdigest() == target["sha256"], "CurseForge file does not match the release JAR")
-    name = f"publish-curseforge-{args.target}.json"
-    require(name not in current, "This upload already has a receipt")
-    upload_asset(value["release_id"], name, json.dumps({"fingerprint": fingerprint(target, "curseforge"), "id": str(args.file_id)}).encode())
-    summary(f"Recorded verified CurseForge upload {args.file_id}; the publishing workflow can now be rerun.")
+    write_json(ROOT / "build/release/outcome.json", upload_record(value, target, args.platform, "complete", result["id"]))
+    summary(f"{args.platform} / {args.target}: uploaded ({result['id']})")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest="command", required=True)
     subs.add_parser("selectors")
+    p = subs.add_parser("restore")
+    p.add_argument("--release-id", type=int, required=True)
+    p.add_argument("--target")
+    p.add_argument("--platform", choices=["modrinth", "curseforge"])
+    p = subs.add_parser("commit-version")
+    p.add_argument("--artifact-id", type=int, required=True)
     p = subs.add_parser("prepare")
     p.add_argument("--release-id", type=int, required=True)
     p = subs.add_parser("plan")
     p.add_argument("--context", default="build/release/context.json")
     subs.add_parser("stage")
-    p = subs.add_parser("publish")
-    p.add_argument("--target", required=True)
-    p.add_argument("--platform", choices=["modrinth", "curseforge"], required=True)
-    p = subs.add_parser("recover-curseforge")
-    p.add_argument("--target", required=True)
-    p.add_argument("--file-id", type=int, required=True)
+    for command in ("begin-upload", "publish"):
+        p = subs.add_parser(command)
+        p.add_argument("--target", required=True)
+        p.add_argument("--platform", choices=["modrinth", "curseforge"], required=True)
+        if command == "publish":
+            p.add_argument("--artifact-id", type=int, required=True)
     subs.add_parser("minecraft-versions")
     args = parser.parse_args()
-    {"selectors": selectors, "prepare": prepare, "minecraft-versions": minecraft_versions,
-     "plan": plan, "stage": stage, "publish": publish, "recover-curseforge": recover_curseforge}[args.command](args)
+    {"selectors": selectors, "restore": restore, "prepare": prepare, "commit-version": commit_version, "minecraft-versions": minecraft_versions,
+     "plan": plan, "stage": stage, "begin-upload": begin_upload, "publish": publish}[args.command](args)
 
 
 if __name__ == "__main__":
