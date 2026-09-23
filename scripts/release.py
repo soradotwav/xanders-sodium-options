@@ -161,7 +161,8 @@ def gh_headers():
 
 
 def github(path, **kwargs):
-    return request(f"https://api.github.com/repos/{repo()}/{path}", headers=gh_headers(), **kwargs)
+    base = f"https://api.github.com/repos/{repo()}"
+    return request(base + ("/" + path if path else ""), headers=gh_headers(), **kwargs)
 
 
 def asset_bytes(asset):
