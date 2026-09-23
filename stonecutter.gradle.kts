@@ -14,3 +14,29 @@ stonecutter parameters {
     constants["neoforge"] = loader == "neoforge"
     swaps["mod_version"] = "\"${property("mod.version")}\";"
 }
+
+tasks.register("buildRelease") {
+    group = "build"
+    val targets = provider {
+        subprojects.filter { it.projectDir.parentFile == rootProject.file("versions") }
+    }
+    dependsOn(targets.map { projects -> projects.map { "${it.path}:buildAndCollect" } })
+    doLast {
+        val artifacts = targets.get().map { target ->
+            val loader = target.name.substringAfterLast('-')
+            val collect = target.tasks.named<Copy>("buildAndCollect").get()
+            val artifact = collect.source.singleFile
+            mapOf(
+                "target" to target.name,
+                "minecraft" to target.name.substringBeforeLast('-'),
+                "loader" to loader,
+                "version" to target.version.toString(),
+                "path" to collect.destinationDir.resolve(artifact.name).relativeTo(rootDir).invariantSeparatorsPath
+            )
+        }
+        check(artifacts.isNotEmpty()) { "No registered release targets" }
+        val output = layout.buildDirectory.file("libs/release-artifacts.json").get().asFile
+        output.parentFile.mkdirs()
+        output.writeText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(artifacts)) + "\n")
+    }
+}

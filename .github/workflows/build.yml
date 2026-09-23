@@ -4,12 +4,20 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
+      artifact-name:
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.workflow }}-${{ github.ref }}
+  group: build-${{ github.workflow }}-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -19,6 +27,11 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Test release tooling
+        run: python3 -m unittest discover -s scripts/tests -v
 
       - name: Set up Java 21 and 25
         uses: actions/setup-java@v5
@@ -33,23 +46,19 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Check and build all targets
-        run: >-
-          ./gradlew --no-daemon --console=plain
-          -Dorg.gradle.java.installations.fromEnv=JAVA_HOME_21_X64,JAVA_HOME_25_X64
-          spotlessCheck
-          :1.21.11-fabric:buildAndCollect
-          :1.21.11-neoforge:buildAndCollect
-          :26.1-fabric:buildAndCollect
-          :26.1-neoforge:buildAndCollect
-          :26.2-fabric:buildAndCollect
-          :26.2-neoforge:buildAndCollect
-          :26.3-fabric:buildAndCollect
+        run: |
+          ./gradlew --no-daemon --console=plain \
+            -Dorg.gradle.java.installations.fromEnv=JAVA_HOME_21_X64,JAVA_HOME_25_X64 \
+            spotlessCheck buildRelease
 
-      - name: Upload JARs for manual distribution
+      - name: Upload distributable JARs
         uses: actions/upload-artifact@v4
         with:
-          name: xanders-sodium-options-${{ github.sha }}
+          name: ${{ inputs.artifact-name || format('xanders-sodium-options-{0}', github.sha) }}
           # Collection tasks select the distributable JAR, excluding dev/source JARs.
-          path: build/libs/**/*.jar
+          path: |
+            build/libs/**/*.jar
+            build/libs/release-artifacts.json
           if-no-files-found: error
+          overwrite: true
           retention-days: 14

@@ -1,0 +1,122 @@
+name: Publish release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: GitHub release ID to retry (shown in the original run)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+# The selector maintenance workflow uses this group too. Never cancel uploads.
+concurrency:
+  group: xso-publishing
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.prepare.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - name: Test release tooling
+        run: python3 -m unittest discover -s scripts/tests -v
+      - name: Commit version bump or resume saved release
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ github.event.release.id || inputs.release_id }}
+        run: |
+          echo "Release ID: $RELEASE_ID" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/release.py prepare --release-id "$RELEASE_ID"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-context
+          path: build/release/context.json
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 14
+
+  build:
+    needs: prepare
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ needs.prepare.outputs.sha }}
+      artifact-name: release-jars
+
+  package:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-context
+          path: build/release
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-jars
+          path: build/libs
+      - name: Fetch known Minecraft releases
+        run: python3 scripts/release.py minecraft-versions
+      - name: Validate every JAR and render platform metadata
+        id: plan
+        run: python3 scripts/release.py plan
+      - name: Assign final version tag and attach validated JARs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/release.py stage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publishing-plan
+          path: build/release/plan.json
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 14
+
+  publish:
+    needs: [prepare, package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: publishing
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.package.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: publishing-plan
+          path: build/release
+      - name: Upload or verify completed upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          TARGET: ${{ matrix.target }}
+          PLATFORM: ${{ matrix.platform }}
+        run: python3 scripts/release.py publish --target "$TARGET" --platform "$PLATFORM"
